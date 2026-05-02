@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "ghost-fleet-detector",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@deck.gl/layers": "^9.3.2",
+    "@deck.gl/react": "^9.3.2",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.1",
+    "@types/papaparse": "^5.5.2",
+    "deck.gl": "^9.3.2",
+    "lucide-react": "^1.14.0",
+    "mapbox-gl": "^3.23.0",
     "next": "16.2.4",
+    "papaparse": "^5.5.3",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-map-gl": "^8.1.1",
+    "recharts": "^3.8.1",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

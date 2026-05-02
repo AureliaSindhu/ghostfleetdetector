@@ -1,0 +1,23 @@
+CREATE TABLE dark_periods (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  mmsi TEXT NOT NULL,
+  last_seen_time TIMESTAMPTZ NOT NULL,
+  reappear_time TIMESTAMPTZ NOT NULL,
+  gap_hours DOUBLE PRECISION NOT NULL,
+  last_lat DOUBLE PRECISION NOT NULL,
+  last_lon DOUBLE PRECISION NOT NULL,
+  reappear_lat DOUBLE PRECISION NOT NULL,
+  reappear_lon DOUBLE PRECISION NOT NULL,
+  distance_nm DOUBLE PRECISION NOT NULL,
+  implied_speed_knots DOUBLE PRECISION NOT NULL,
+  suspicion_score INTEGER DEFAULT 0,
+  risk_level TEXT CHECK (risk_level IN ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW')),
+  reasons JSONB DEFAULT '[]',
+  weather_data JSONB,
+  sanctions_data JSONB,
+  storm_data JSONB,
+  upload_batch_id UUID REFERENCES upload_batches(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
