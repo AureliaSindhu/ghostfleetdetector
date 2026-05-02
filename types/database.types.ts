@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       ais_records: {
@@ -55,6 +55,7 @@ export interface Database {
           user_id?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       dark_periods: {
         Row: {
@@ -126,6 +127,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       upload_batches: {
         Row: {
@@ -170,7 +172,11 @@ export interface Database {
           created_at?: string;
           completed_at?: string | null;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
   };
-}
+};
