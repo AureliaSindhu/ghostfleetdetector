@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, ArcLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, ArcLayer, GeoJsonLayer } from '@deck.gl/layers';
 import { Map as MapGL } from 'react-map-gl/mapbox';
-import { Maximize2, Minimize2, Globe, Map } from 'lucide-react';
+import { Maximize2, Minimize2, Globe, Map, Target } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
+import { _GlobeView as GlobeView, MapView } from '@deck.gl/core';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -17,10 +18,10 @@ const RISK_COLORS: Record<string, [number, number, number, number]> = {
 };
 
 const RISK_LABELS = [
-  { level: 'CRITICAL', color: 'bg-red-500', label: 'Critical (70-100)' },
-  { level: 'HIGH', color: 'bg-orange-500', label: 'High (50-69)' },
-  { level: 'MEDIUM', color: 'bg-yellow-500', label: 'Medium (30-49)' },
-  { level: 'LOW', color: 'bg-green-500', label: 'Low (0-29)' },
+  { level: 'CRITICAL', color: 'bg-red-500', textColor: 'text-red-400', label: 'CRITICAL [70-100]' },
+  { level: 'HIGH', color: 'bg-orange-500', textColor: 'text-orange-400', label: 'HIGH [50-69]' },
+  { level: 'MEDIUM', color: 'bg-yellow-500', textColor: 'text-yellow-400', label: 'MEDIUM [30-49]' },
+  { level: 'LOW', color: 'bg-green-500', textColor: 'text-green-400', label: 'LOW [0-29]' },
 ];
 
 interface ViewState {
@@ -47,6 +48,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
     bearing: 0,
   });
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize view state when dark periods load for the first time
   useEffect(() => {
@@ -63,6 +65,20 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
       setHasInitialized(true);
     }
   }, [darkPeriods, hasInitialized]);
+
+  // Center on data
+  const handleCenterOnData = useCallback(() => {
+    if (darkPeriods.length > 0) {
+      const avgLat = darkPeriods.reduce((sum, d) => sum + d.lastLat, 0) / darkPeriods.length;
+      const avgLon = darkPeriods.reduce((sum, d) => sum + d.lastLon, 0) / darkPeriods.length;
+      setViewState((prev) => ({
+        ...prev,
+        longitude: avgLon,
+        latitude: avgLat,
+        zoom: 2,
+      }));
+    }
+  }, [darkPeriods]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleViewStateChange = useCallback((params: any) => {
@@ -111,8 +127,8 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
   }, [darkPeriods]);
 
   return (
-    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-gray-900' : ''}`}>
-      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden`}>
+    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
+      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden border border-cyan-500/20`}>
         <DeckGL
           viewState={viewState}
           onViewStateChange={handleViewStateChange}
@@ -121,28 +137,28 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
           getTooltip={(info) => {
             const obj = info.object as ScoredDarkPeriod | undefined;
             if (!obj) return null;
+            const riskColor = obj.riskLevel === 'CRITICAL' ? '#ff3366' : obj.riskLevel === 'HIGH' ? '#f97316' : obj.riskLevel === 'MEDIUM' ? '#eab308' : '#00ff88';
             return {
               html: `
-                <div style="padding:12px;background:#1f2937;color:#fff;border-radius:8px;font-size:13px;min-width:200px;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-                  <div style="font-size:16px;font-weight:bold;margin-bottom:8px;border-bottom:1px solid #374151;padding-bottom:6px;">
-                    🚢 MMSI: ${obj.mmsi}
+                <div style="padding:12px;background:linear-gradient(180deg, #0d1f35 0%, #0a1628 100%);color:#fff;border-radius:8px;font-size:12px;min-width:220px;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid rgba(0,212,255,0.3);font-family:monospace;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,212,255,0.2);">
+                    <div style="width:8px;height:8px;background:${riskColor};border-radius:50%;box-shadow:0 0 8px ${riskColor};"></div>
+                    <span style="color:#00d4ff;font-size:14px;letter-spacing:1px;">MMSI: ${obj.mmsi}</span>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-                    <span style="color:#9ca3af;">Risk:</span>
-                    <span style="font-weight:bold;color:${obj.riskLevel === 'CRITICAL' ? '#ef4444' : obj.riskLevel === 'HIGH' ? '#f97316' : obj.riskLevel === 'MEDIUM' ? '#eab308' : '#22c55e'};">
-                      ${obj.riskLevel}
-                    </span>
-                    <span style="color:#9ca3af;">Score:</span>
-                    <span>${obj.suspicionScore}/100</span>
-                    <span style="color:#9ca3af;">Dark Period:</span>
-                    <span>${obj.gapHours.toFixed(1)} hours</span>
-                    <span style="color:#9ca3af;">Distance:</span>
-                    <span>${obj.distanceNm.toFixed(0)} nm</span>
-                    <span style="color:#9ca3af;">Speed:</span>
-                    <span>${obj.impliedSpeedKnots.toFixed(1)} kts</span>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:rgba(0,212,255,0.7);">
+                    <span>THREAT:</span>
+                    <span style="font-weight:bold;color:${riskColor};">${obj.riskLevel}</span>
+                    <span>SCORE:</span>
+                    <span style="color:#fff;">${obj.suspicionScore}/100</span>
+                    <span>DARK:</span>
+                    <span style="color:#fff;">${obj.gapHours.toFixed(1)}H</span>
+                    <span>DIST:</span>
+                    <span style="color:#fff;">${obj.distanceNm.toFixed(0)} NM</span>
+                    <span>SPEED:</span>
+                    <span style="color:#fff;">${obj.impliedSpeedKnots.toFixed(1)} KTS</span>
                   </div>
-                  <div style="margin-top:8px;font-size:11px;color:#6b7280;">
-                    Click for details
+                  <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,212,255,0.2);font-size:10px;color:rgba(0,212,255,0.5);text-align:center;">
+                    [ CLICK FOR DETAILS ]
                   </div>
                 </div>
               `,
@@ -157,26 +173,41 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
         </DeckGL>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-gray-900/90 backdrop-blur rounded-lg p-3 text-sm">
-        <div className="font-semibold mb-2 text-white">Risk Levels</div>
+      {/* Legend - Naval Style */}
+      <div className="absolute bottom-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 rounded-lg p-3 text-sm">
+        <div className="font-mono text-cyan-400/80 text-xs tracking-wider mb-2 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+          THREAT LEVELS
+        </div>
         <div className="space-y-1.5">
-          {RISK_LABELS.map(({ level, color, label }) => (
-            <div key={level} className="flex items-center gap-2">
-              <span className={`w-3 h-3 rounded-full ${color}`} />
-              <span className="text-gray-300">{label}</span>
-              <span className="text-gray-500 ml-auto">{riskCounts[level]}</span>
+          {RISK_LABELS.map(({ level, color, textColor, label }) => (
+            <div key={level} className="flex items-center gap-2 font-mono text-xs">
+              <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm`} />
+              <span className={`${textColor}`}>{label}</span>
+              <span className="text-cyan-500/50 ml-auto tabular-nums">[{riskCounts[level]}]</span>
             </div>
           ))}
         </div>
+        <div className="mt-2 pt-2 border-t border-cyan-500/20 text-cyan-500/50 text-xs font-mono">
+          TOTAL: {darkPeriods.length} CONTACTS
+        </div>
       </div>
 
-      {/* Map Controls */}
-      <div className="absolute top-4 right-4 flex gap-2">
+      {/* Map Controls - Naval Style */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2">
+        {/* Center on Data */}
+        <button
+          onClick={handleCenterOnData}
+          className="bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 hover:border-cyan-400/50 p-2 rounded-lg text-cyan-400/70 hover:text-cyan-300 transition-all"
+          title="Center on data"
+        >
+          <Target className="w-5 h-5" />
+        </button>
+
         {/* Globe/Flat Toggle */}
         <button
           onClick={() => setIsGlobeView(!isGlobeView)}
-          className="bg-gray-900/90 backdrop-blur p-2 rounded-lg text-gray-300 hover:text-white transition-colors"
+          className="bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 hover:border-cyan-400/50 p-2 rounded-lg text-cyan-400/70 hover:text-cyan-300 transition-all"
           title={isGlobeView ? 'Switch to flat view' : 'Switch to globe view'}
         >
           {isGlobeView ? <Map className="w-5 h-5" /> : <Globe className="w-5 h-5" />}
@@ -185,17 +216,18 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
         {/* Fullscreen Toggle */}
         <button
           onClick={() => setIsFullscreen(!isFullscreen)}
-          className="bg-gray-900/90 backdrop-blur p-2 rounded-lg text-gray-300 hover:text-white transition-colors"
+          className="bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 hover:border-cyan-400/50 p-2 rounded-lg text-cyan-400/70 hover:text-cyan-300 transition-all"
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
         >
           {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Fullscreen close with Escape hint */}
+      {/* Fullscreen close hint - Naval Style */}
       {isFullscreen && (
-        <div className="absolute top-4 left-4 bg-gray-900/90 backdrop-blur px-3 py-2 rounded-lg text-sm text-gray-400">
-          Press <kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-white">ESC</kbd> or click button to exit
+        <div className="absolute top-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 px-3 py-2 rounded-lg text-sm text-cyan-400/70 font-mono">
+          <kbd className="bg-cyan-900/50 border border-cyan-500/30 px-1.5 py-0.5 rounded text-cyan-300 text-xs">ESC</kbd>
+          <span className="ml-2 text-xs">TO EXIT</span>
         </div>
       )}
     </div>

@@ -98,58 +98,63 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
   }, [isActive, alertIndex, onNewAlert]);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
+    <div className="bg-[#0d1f35] rounded-lg p-4 border border-cyan-500/20" style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Radio className={`w-5 h-5 ${isActive ? 'text-red-500 animate-pulse' : 'text-gray-500'}`} />
-          <h3 className="text-lg font-semibold text-white">Live Feed</h3>
+          <div className={`relative ${isActive ? 'animate-pulse' : ''}`}>
+            <Radio className={`w-5 h-5 ${isActive ? 'text-red-400' : 'text-cyan-500/50'}`} />
+            {isActive && (
+              <div className="absolute inset-0 w-5 h-5 bg-red-500/20 rounded-full animate-ping" />
+            )}
+          </div>
+          <h3 className="text-sm font-mono font-semibold text-cyan-300 tracking-wider">LIVE FEED</h3>
           {isActive && (
-            <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded animate-pulse">
-              LIVE
+            <span className="text-[10px] bg-red-500/20 border border-red-500/50 text-red-400 px-2 py-0.5 rounded font-mono animate-pulse">
+              ACTIVE
             </span>
           )}
         </div>
         <button
           onClick={onToggle}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors ${
+          className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs font-mono transition-all ${
             isActive
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
+              : 'bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30'
           }`}
         >
           {isActive ? (
             <>
-              <Pause className="w-4 h-4" /> Pause
+              <Pause className="w-3 h-3" /> PAUSE
             </>
           ) : (
             <>
-              <Play className="w-4 h-4" /> Start
+              <Play className="w-3 h-3" /> START
             </>
           )}
         </button>
       </div>
 
       {alerts.length === 0 ? (
-        <div className="text-gray-500 text-sm text-center py-4">
-          {isActive ? 'Waiting for incoming alerts...' : 'Click Start to begin live monitoring'}
+        <div className="text-cyan-500/50 text-xs text-center py-6 font-mono border border-dashed border-cyan-500/20 rounded">
+          {isActive ? '// MONITORING FOR INCOMING SIGNALS...' : '// CLICK START TO BEGIN MONITORING'}
         </div>
       ) : (
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {alerts.map((alert, i) => (
             <div
               key={`${alert.mmsi}-${i}`}
-              className={`p-2 rounded border-l-4 ${
+              className={`p-2 rounded border-l-2 ${
                 alert.riskLevel === 'CRITICAL'
-                  ? 'border-red-500 bg-red-900/30'
+                  ? 'border-red-500 bg-red-500/10'
                   : alert.riskLevel === 'HIGH'
-                  ? 'border-orange-500 bg-orange-900/30'
-                  : 'border-yellow-500 bg-yellow-900/30'
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : 'border-yellow-500 bg-yellow-500/10'
               } ${i === 0 ? 'animate-pulse' : ''}`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm text-white">{alert.mmsi}</span>
+                <span className="font-mono text-xs text-cyan-200">{alert.mmsi}</span>
                 <span
-                  className={`text-xs font-bold ${
+                  className={`text-[10px] font-mono font-bold ${
                     alert.riskLevel === 'CRITICAL'
                       ? 'text-red-400'
                       : alert.riskLevel === 'HIGH'
@@ -160,17 +165,17 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
                   {alert.riskLevel}
                 </span>
               </div>
-              <div className="text-xs text-gray-400 mt-1">
-                Score: {alert.suspicionScore} | {alert.reasons[0]}
+              <div className="text-[10px] text-cyan-400/60 mt-1 font-mono truncate">
+                [{alert.suspicionScore}] {alert.reasons[0]}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="mt-3 text-xs text-gray-500 flex items-center gap-1">
+      <div className="mt-3 pt-2 border-t border-cyan-500/20 text-[10px] text-cyan-500/40 flex items-center gap-1 font-mono">
         <AlertTriangle className="w-3 h-3" />
-        Simulated feed for demo purposes
+        SIMULATED FEED // DEMO MODE
       </div>
     </div>
   );

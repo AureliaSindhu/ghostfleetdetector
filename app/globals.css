@@ -4,6 +4,141 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Naval/Military Tech Theme */
+:root {
+  /* Naval color palette */
+  --naval-deep: #0a1628;
+  --naval-dark: #0d1f35;
+  --naval-mid: #132743;
+  --naval-accent: #1e3a5f;
+  --naval-highlight: #2d5a87;
+
+  /* Tactical colors */
+  --tactical-cyan: #00d4ff;
+  --tactical-green: #00ff88;
+  --tactical-amber: #ffb800;
+  --tactical-red: #ff3366;
+
+  /* Scan line effect */
+  --scan-line-color: rgba(0, 212, 255, 0.03);
+}
+
+/* Radar scan animation */
+@keyframes radar-scan {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes radar-pulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--tactical-cyan), 0 0 10px var(--tactical-cyan), 0 0 15px var(--tactical-cyan);
+  }
+  50% {
+    box-shadow: 0 0 10px var(--tactical-cyan), 0 0 20px var(--tactical-cyan), 0 0 30px var(--tactical-cyan);
+  }
+}
+
+@keyframes data-stream {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0.3;
+  }
+}
+
+/* Scan lines overlay effect */
+.scan-lines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--scan-line-color) 2px,
+    var(--scan-line-color) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Grid overlay effect */
+.tactical-grid {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Glowing border effect */
+.glow-border {
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow:
+    inset 0 0 20px rgba(0, 212, 255, 0.05),
+    0 0 10px rgba(0, 212, 255, 0.1);
+}
+
+/* Terminal text effect */
+.terminal-text {
+  font-family: 'Geist Mono', monospace;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Data panel styling */
+.data-panel {
+  background: linear-gradient(180deg, var(--naval-dark) 0%, var(--naval-deep) 100%);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Status indicator animations */
+.status-critical {
+  animation: blink 1s infinite;
+}
+
+.status-active {
+  animation: glow-pulse 2s infinite;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -18,6 +18,8 @@ import { LiveFeed } from '@/components/LiveFeed';
 import { ScoringConfig, ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringConfig';
 import { MagicScanner } from '@/components/MagicScanner';
 import { DataGenerator } from '@/components/DataGenerator';
+import { RadarOverlay } from '@/components/RadarOverlay';
+import { ChatBox } from '@/components/ChatBox';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +48,16 @@ export default function Home() {
     downgraded: number;
     visible: boolean;
   } | null>(null);
+
+  // Radar scan animation state
+  const [isRadarScanning, setIsRadarScanning] = useState(false);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Update current time every second for real-time feel
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Rescore dark periods when scoring factors change
   useEffect(() => {
@@ -134,9 +146,14 @@ export default function Home() {
   );
 
   const handleDemo = () => {
+    setIsRadarScanning(true);
+  };
+
+  const handleRadarScanComplete = () => {
     setDarkPeriods(SAMPLE_DARK_PERIODS);
     setRecords([]);
     setIsDemo(true);
+    setIsRadarScanning(false);
   };
 
   const summary = isDemo ? SAMPLE_SUMMARY : records.length > 0 ? getDataSummary(records) : null;
@@ -267,58 +284,90 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">🚢 Ghost Fleet Detector</h1>
-          <p className="text-gray-400">
-            Detect vessels going dark to evade sanctions, smuggle cargo, and fish illegally
-          </p>
+    <main className="min-h-screen bg-[#0a1628] text-white p-6 tactical-grid relative">
+      {/* Radar scanning overlay */}
+      <RadarOverlay isScanning={isRadarScanning} onScanComplete={handleRadarScanComplete} />
+
+      {/* Scan lines effect */}
+      <div className="fixed inset-0 pointer-events-none z-[5] scan-lines" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Naval Header */}
+        <header className="mb-8 relative">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_#00d4ff] animate-pulse" />
+                <span className="text-cyan-400/70 font-mono text-xs tracking-widest">MARITIME SURVEILLANCE SYSTEM</span>
+              </div>
+              <h1 className="text-4xl font-bold mb-2 text-white tracking-tight">
+                GHOST FLEET DETECTOR
+              </h1>
+              <p className="text-cyan-300/60 font-mono text-sm">
+                DETECTING DARK VESSELS // TRACKING AIS GAPS // MONITORING SUSPICIOUS ACTIVITY
+              </p>
+            </div>
+            <div className="text-right font-mono">
+              <div className="text-cyan-400 text-2xl tabular-nums">
+                {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+              </div>
+              <div className="text-cyan-300/50 text-xs">
+                {currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}
+              </div>
+              <div className="mt-2 flex items-center gap-2 justify-end">
+                <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_#22c55e]" />
+                <span className="text-green-400/80 text-xs">SYSTEM ONLINE</span>
+              </div>
+            </div>
+          </div>
+          {/* Decorative line */}
+          <div className="mt-4 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
         </header>
 
         {darkPeriods.length === 0 ? (
           <div>
             <div className="mb-4 flex items-center gap-4 flex-wrap">
-              <label className="text-sm text-gray-300">
-                Min dark period:
+              <label className="text-sm text-cyan-300/80 font-mono flex items-center gap-2">
+                <span className="text-cyan-400/60">MIN_DARK_PERIOD:</span>
                 <input
                   type="number"
                   value={minGapHours}
                   onChange={(e) => setMinGapHours(Number(e.target.value))}
-                  className="ml-2 w-20 bg-gray-800 rounded px-2 py-1 text-white"
+                  className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1 text-cyan-300 font-mono text-center focus:border-cyan-400 focus:outline-none"
                   min={1}
                   max={72}
                 />
-                <span className="ml-1">hours</span>
+                <span className="text-cyan-400/60">HRS</span>
               </label>
               {uploadHistory.length > 0 && (
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="text-sm text-blue-400 hover:text-blue-300"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1"
                 >
-                  📜 {showHistory ? 'Hide' : 'Show'} History ({uploadHistory.length})
+                  <span className="w-2 h-2 bg-cyan-400/50 rounded-full" />
+                  {showHistory ? 'HIDE' : 'SHOW'} HISTORY [{uploadHistory.length}]
                 </button>
               )}
             </div>
 
             {showHistory && uploadHistory.length > 0 && (
-              <div className="mb-6 bg-gray-800 rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3">📜 Previous Analyses</h3>
+              <div className="mb-6 data-panel rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3 text-cyan-300 font-mono">// PREVIOUS ANALYSES</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {uploadHistory.map((batch) => (
                     <button
                       key={batch.id}
                       onClick={() => handleLoadFromHistory(batch.id)}
-                      className="w-full text-left bg-gray-700 hover:bg-gray-600 rounded p-3 transition-colors"
+                      className="w-full text-left bg-[#1e3a5f]/50 hover:bg-[#2d5a87]/50 border border-cyan-500/20 hover:border-cyan-400/40 rounded p-3 transition-all"
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-medium">{batch.filename || 'Unnamed'}</span>
-                        <span className="text-sm text-gray-400">
-                          {batch.dark_periods_found} dark periods
+                        <span className="font-mono text-cyan-200">{batch.filename || 'UNNAMED'}</span>
+                        <span className="text-sm text-cyan-400/70 font-mono">
+                          {batch.dark_periods_found} DETECTIONS
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(batch.created_at).toLocaleString()}
+                      <div className="text-xs text-cyan-500/50 mt-1 font-mono">
+                        {new Date(batch.created_at).toLocaleString().toUpperCase()}
                       </div>
                     </button>
                   ))}
@@ -332,16 +381,27 @@ export default function Home() {
                 <div className="mt-4 flex justify-center gap-4 flex-wrap">
                   <button
                     onClick={handleDemo}
-                    className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition-colors"
+                    className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] hover:shadow-[0_0_25px_rgba(0,212,255,0.5)] flex items-center gap-2"
                   >
-                    🎮 Run Demo with Sample Data
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    INITIALIZE DEMO SCAN
                   </button>
                   <button
                     onClick={handleLoadAllFromDatabase}
                     disabled={isLoading || dbCount === 0}
-                    className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
+                    className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all disabled:opacity-50 flex items-center gap-2"
                   >
-                    {isLoading ? '⏳ Loading...' : `🗄️ Load from Database${dbCount > 0 ? ` (${dbCount})` : ''}`}
+                    {isLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                        LOADING...
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-cyan-400">▸</span>
+                        LOAD DATABASE {dbCount > 0 && `[${dbCount}]`}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -373,20 +433,22 @@ export default function Home() {
 
             {/* Score change notification */}
             {scoreChangeNotification?.visible && (
-              <div className="fixed top-4 right-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-4 max-w-sm animate-pulse">
+              <div className="fixed top-4 right-4 z-50 data-panel rounded-lg shadow-[0_0_30px_rgba(0,212,255,0.2)] p-4 max-w-sm border-l-4 border-l-cyan-400">
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">📊</div>
+                  <div className="w-8 h-8 rounded bg-cyan-500/20 flex items-center justify-center">
+                    <span className="text-cyan-400 text-lg">◉</span>
+                  </div>
                   <div>
-                    <p className="font-semibold text-white">Scores Updated</p>
-                    <div className="text-sm text-gray-300 mt-1 space-y-1">
+                    <p className="font-mono text-cyan-200 tracking-wide">RISK RECALCULATED</p>
+                    <div className="text-sm mt-2 space-y-1 font-mono">
                       {scoreChangeNotification.upgraded > 0 && (
-                        <p className="text-red-400">
-                          ↑ {scoreChangeNotification.upgraded} vessel{scoreChangeNotification.upgraded > 1 ? 's' : ''} increased risk
+                        <p className="text-red-400 flex items-center gap-2">
+                          <span>▲</span> {scoreChangeNotification.upgraded} VESSEL{scoreChangeNotification.upgraded > 1 ? 'S' : ''} ELEVATED
                         </p>
                       )}
                       {scoreChangeNotification.downgraded > 0 && (
-                        <p className="text-green-400">
-                          ↓ {scoreChangeNotification.downgraded} vessel{scoreChangeNotification.downgraded > 1 ? 's' : ''} decreased risk
+                        <p className="text-green-400 flex items-center gap-2">
+                          <span>▼</span> {scoreChangeNotification.downgraded} VESSEL{scoreChangeNotification.downgraded > 1 ? 'S' : ''} REDUCED
                         </p>
                       )}
                     </div>
@@ -395,8 +457,12 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">🗺️ Dark Periods Map</h2>
+            <div className="data-panel rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
+                <h2 className="text-xl font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
+              </div>
               <DarkPeriodsMap
                 darkPeriods={darkPeriods}
                 onSelectPeriod={setSelectedPeriod}
@@ -425,65 +491,84 @@ export default function Home() {
             </div>
 
             {(chartRiskFilter || chartDurationFilter.min != null) && (
-              <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-blue-300 text-sm">
-                  Showing {filteredDarkPeriods.length} of {darkPeriods.length} dark periods
-                  {chartRiskFilter && ` (${chartRiskFilter} risk)`}
-                  {chartDurationFilter.min != null && ` (${chartDurationFilter.min}-${chartDurationFilter.max === Infinity ? '72+' : chartDurationFilter.max}h duration)`}
+              <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-3 flex items-center justify-between">
+                <span className="text-cyan-300 text-sm font-mono">
+                  FILTERED: {filteredDarkPeriods.length}/{darkPeriods.length} DETECTIONS
+                  {chartRiskFilter && ` // ${chartRiskFilter} RISK`}
+                  {chartDurationFilter.min != null && ` // ${chartDurationFilter.min}-${chartDurationFilter.max === Infinity ? '72+' : chartDurationFilter.max}H`}
                 </span>
                 <button
                   onClick={() => {
                     setChartRiskFilter(null);
                     setChartDurationFilter({ min: null, max: null });
                   }}
-                  className="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded"
+                  className="text-xs bg-cyan-600/50 hover:bg-cyan-500/50 border border-cyan-400/30 px-3 py-1 rounded font-mono"
                 >
-                  Clear All Filters
+                  CLEAR FILTERS
                 </button>
               </div>
             )}
 
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">🚨 Top Suspicious Vessels</h2>
+            <div className="data-panel rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
+                <h2 className="text-xl font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
+              </div>
               <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
             </div>
 
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-3 flex-wrap data-panel rounded-lg p-4">
+              <div className="text-cyan-400/60 font-mono text-xs mr-2 self-center">EXPORT:</div>
               <button
                 onClick={handleDownloadCSV}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
+                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
               >
-                📥 Download CSV
+                <span className="text-cyan-400">▼</span> CSV
               </button>
               <button
                 onClick={handleDownloadJSON}
-                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded transition-colors"
+                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
               >
-                📥 Download JSON
+                <span className="text-cyan-400">▼</span> JSON
               </button>
               <button
                 onClick={handlePrint}
-                className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition-colors print:hidden"
+                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all print:hidden flex items-center gap-2"
               >
-                🖨️ Print Report
+                <span className="text-cyan-400">◎</span> PRINT
               </button>
+              <div className="w-px h-8 bg-cyan-500/20 self-center mx-2" />
               <button
                 onClick={handleSaveToSupabase}
                 disabled={isSaving || saveStatus === 'saved'}
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
+                className="bg-green-600/30 hover:bg-green-500/40 border border-green-500/50 hover:border-green-400/70 px-4 py-2 rounded font-mono text-sm transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                {isSaving ? '💾 Saving...' : saveStatus === 'saved' ? '✅ Saved!' : '💾 Save to Database'}
+                {isSaving ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                    SAVING...
+                  </>
+                ) : saveStatus === 'saved' ? (
+                  <>
+                    <span className="text-green-400">✓</span> SAVED
+                  </>
+                ) : (
+                  <>
+                    <span className="text-green-400">▲</span> SAVE TO DB
+                  </>
+                )}
               </button>
               <button
                 onClick={handleReset}
-                className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
+                className="bg-amber-600/30 hover:bg-amber-500/40 border border-amber-500/50 hover:border-amber-400/70 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
               >
-                🔄 New Analysis
+                <span className="text-amber-400">↻</span> NEW SCAN
               </button>
             </div>
             {saveStatus === 'error' && (
-              <p className="text-red-400 text-sm mt-2">
-                Could not save to database. Data is still available locally.
+              <p className="text-red-400 text-sm mt-2 font-mono">
+                ⚠ DATABASE CONNECTION FAILED // DATA AVAILABLE LOCALLY
               </p>
             )}
 
@@ -494,6 +579,9 @@ export default function Home() {
             }} />
           </div>
         )}
+
+        {/* AI Chat Assistant */}
+        {darkPeriods.length > 0 && <ChatBox darkPeriods={darkPeriods} />}
       </div>
     </main>
   );

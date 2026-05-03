@@ -158,24 +158,26 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mt-6">
+    <div className="bg-[#0d1f35] rounded-lg p-4 mt-6 border border-cyan-500/20" style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)' }}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <Shuffle className="w-5 h-5 text-purple-400" />
+          <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center">
+            <Shuffle className="w-4 h-4 text-purple-400" />
+          </div>
           <div>
-            <h3 className="font-semibold text-white">Random Data Generator</h3>
-            <p className="text-xs text-gray-400">Generate synthetic dark period data for testing</p>
+            <h3 className="font-mono font-semibold text-cyan-200 tracking-wide text-sm">DATA GENERATOR</h3>
+            <p className="text-[10px] text-cyan-500/50 font-mono">GENERATE SYNTHETIC DARK PERIOD DATA</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-300 flex items-center gap-2">
-            Vessels:
+          <label className="text-xs text-cyan-400/70 font-mono flex items-center gap-2">
+            COUNT:
             <input
               type="number"
               value={count}
               onChange={(e) => setCount(Math.max(1, Math.min(500, Number(e.target.value))))}
-              className="w-20 bg-gray-700 rounded px-2 py-1 text-white text-center"
+              className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1.5 text-cyan-300 text-center font-mono text-sm focus:border-cyan-400 focus:outline-none"
               min={1}
               max={500}
             />
@@ -184,18 +186,27 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-purple-500/20 border border-purple-500/50 hover:bg-purple-500/30 px-4 py-2 rounded font-mono text-sm text-purple-300 transition-all disabled:opacity-50"
           >
-            <Play className="w-4 h-4" />
-            {isGenerating ? 'Generating...' : 'Use Data'}
+            {isGenerating ? (
+              <>
+                <span className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                GENERATING...
+              </>
+            ) : (
+              <>
+                <Play className="w-3 h-3" />
+                GENERATE
+              </>
+            )}
           </button>
 
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition-colors"
+            className="flex items-center gap-2 bg-[#1e3a5f] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm text-cyan-300 transition-all"
           >
-            <Download className="w-4 h-4" />
-            Export CSV
+            <Download className="w-3 h-3" />
+            EXPORT CSV
           </button>
         </div>
       </div>
