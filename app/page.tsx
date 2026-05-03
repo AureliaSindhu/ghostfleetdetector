@@ -17,6 +17,7 @@ import { ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringCon
 import { DataGenerator } from '@/components/DataGenerator';
 import { RadarOverlay } from '@/components/RadarOverlay';
 import { SettingsModal, SettingsButton } from '@/components/SettingsModal';
+import { ChatBox } from '@/components/ChatBox';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function Home() {
 
   // Settings modal state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  type RightPanel = 'threats' | 'analytics' | 'ingest';
+  type RightPanel = 'threats' | 'analytics' | 'ingest' | 'ai';
   const [rightPanel, setRightPanel] = useState<RightPanel>('threats');
 
   // Update current time every second for real-time feel
@@ -346,14 +347,14 @@ export default function Home() {
 
       <aside className="absolute right-4 top-20 bottom-4 z-20 w-[380px] rounded-md border border-slate-700/90 bg-[#081524]/95 shadow-2xl backdrop-blur flex flex-col overflow-hidden">
         <div className="border-b border-slate-700/80 p-3">
-          <div className="grid grid-cols-3 gap-1 rounded bg-slate-950/50 p-1">
-            {(['threats', 'analytics', 'ingest'] as RightPanel[]).map((panel) => (
+          <div className="grid grid-cols-4 gap-1 rounded bg-slate-950/50 p-1">
+            {(['threats', 'analytics', 'ingest', 'ai'] as RightPanel[]).map((panel) => (
               <button
                 key={panel}
                 onClick={() => setRightPanel(panel)}
                 className={`px-2 py-2 text-xs font-sans uppercase tracking-wider ${rightPanel === panel ? 'bg-cyan-400/15 text-cyan-100' : 'text-slate-400 hover:text-slate-100'}`}
               >
-                {panel === 'threats' ? 'Detail' : panel === 'analytics' ? 'Stats' : 'Data'}
+                {panel === 'threats' ? 'Detail' : panel === 'analytics' ? 'Stats' : panel === 'ingest' ? 'Data' : 'AI'}
               </button>
             ))}
           </div>
@@ -453,6 +454,12 @@ export default function Home() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {rightPanel === 'ai' && (
+            <div className="h-full min-h-[520px]">
+              <ChatBox darkPeriods={filteredDarkPeriods} />
             </div>
           )}
         </div>
