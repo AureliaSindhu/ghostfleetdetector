@@ -8,9 +8,11 @@ interface StatsCardsProps {
   darkPeriods: ScoredDarkPeriod[];
   totalVessels: number;
   totalRecords: number;
+  onRiskFilter?: (riskLevel: string | null) => void;
+  activeRiskFilter?: string | null;
 }
 
-export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
+export function StatsCards({ darkPeriods, totalVessels, onRiskFilter, activeRiskFilter }: StatsCardsProps) {
   const stats = useMemo(() => {
     const critical = darkPeriods.filter((dp) => dp.riskLevel === 'CRITICAL');
     const high = darkPeriods.filter((dp) => dp.riskLevel === 'HIGH');
@@ -62,6 +64,8 @@ export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
         glowColor="rgba(255, 51, 102, 0.3)"
         pulse={stats.critical.count > 0}
         scoreRange="70-100"
+        onClick={() => onRiskFilter?.(activeRiskFilter === 'CRITICAL' ? null : 'CRITICAL')}
+        isActive={activeRiskFilter === 'CRITICAL'}
       />
       <RiskStatCard
         icon={<AlertCircle className="w-4 h-4" />}
@@ -73,6 +77,8 @@ export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
         color="orange"
         glowColor="rgba(249, 115, 22, 0.3)"
         scoreRange="50-69"
+        onClick={() => onRiskFilter?.(activeRiskFilter === 'HIGH' ? null : 'HIGH')}
+        isActive={activeRiskFilter === 'HIGH'}
       />
       <RiskStatCard
         icon={<AlertCircle className="w-4 h-4" />}
@@ -84,6 +90,8 @@ export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
         color="yellow"
         glowColor="rgba(234, 179, 8, 0.3)"
         scoreRange="30-49"
+        onClick={() => onRiskFilter?.(activeRiskFilter === 'MEDIUM' ? null : 'MEDIUM')}
+        isActive={activeRiskFilter === 'MEDIUM'}
       />
       <RiskStatCard
         icon={<CheckCircle className="w-4 h-4" />}
@@ -95,6 +103,8 @@ export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
         color="green"
         glowColor="rgba(0, 255, 136, 0.3)"
         scoreRange="0-29"
+        onClick={() => onRiskFilter?.(activeRiskFilter === 'LOW' ? null : 'LOW')}
+        isActive={activeRiskFilter === 'LOW'}
       />
       <StatCard
         icon={<Navigation className="w-4 h-4" />}
@@ -168,6 +178,8 @@ function RiskStatCard({
   glowColor,
   pulse = false,
   scoreRange,
+  onClick,
+  isActive = false,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -179,12 +191,17 @@ function RiskStatCard({
   glowColor: string;
   pulse?: boolean;
   scoreRange: string;
+  onClick?: () => void;
+  isActive?: boolean;
 }) {
   const classes = colorClasses[color] || colorClasses.cyan;
 
   return (
-    <div
-      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden`}
+    <button
+      onClick={onClick}
+      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden text-left w-full transition-all ${
+        onClick ? 'cursor-pointer hover:bg-[#132743]' : ''
+      } ${isActive ? 'ring-2 ring-cyan-400 bg-[#132743]' : ''}`}
       style={{ boxShadow: `0 0 15px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
     >
       <div className={`absolute top-0 left-0 w-6 h-px`} style={{ background: `linear-gradient(90deg, ${glowColor}, transparent)` }} />
@@ -204,7 +221,7 @@ function RiskStatCard({
       </div>
 
       {/* Progress bar */}
-      <div className="mt-2 h-1 bg-[#132743] rounded-full overflow-hidden">
+      <div className="mt-1.5 h-1 bg-[#132743] rounded-full overflow-hidden">
         <div
           className={`h-full ${classes.barBg} transition-all duration-500`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -213,13 +230,13 @@ function RiskStatCard({
 
       {/* Additional stats */}
       {count > 0 && (
-        <div className="mt-2 flex justify-between text-[9px] font-mono text-cyan-500/50">
+        <div className="mt-1.5 flex justify-between text-[9px] font-mono text-cyan-500/50">
           <span>AVG: {avgScore} pts</span>
           <span>{avgGap}h gap</span>
         </div>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)` }} />
-    </div>
+    </button>
   );
 }

@@ -427,6 +427,8 @@ export default function Home() {
                   darkPeriods={darkPeriods}
                   totalVessels={summary?.uniqueVessels || 0}
                   totalRecords={summary?.totalRecords || 0}
+                  onRiskFilter={setChartRiskFilter}
+                  activeRiskFilter={chartRiskFilter}
                 />
               </div>
               <div className="lg:col-span-1">
@@ -472,22 +474,34 @@ export default function Home() {
               />
             )}
 
-            {/* Main content: Map + Suspicious Ships on top, Charts side by side, Table below */}
+            {/* Main content: Map + Table on left, Suspicious Ships + Charts on right */}
             <div className="grid lg:grid-cols-5 gap-4">
-              {/* Left side: Tactical Map */}
-              <div className="lg:col-span-3">
-                <div className="data-panel rounded-lg p-4 h-full">
+              {/* Left side: Tactical Map + Threat Analysis */}
+              <div className="lg:col-span-3 space-y-4">
+                <div className="data-panel rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
                     <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
                   </div>
-                  <div className="h-[400px]">
+                  <div className="h-[350px]">
                     <DarkPeriodsMap
                       darkPeriods={darkPeriods}
                       onSelectPeriod={setSelectedPeriod}
                       isLiveScanning={isLiveFeedActive}
                     />
+                  </div>
+                </div>
+
+                {/* Threat Analysis Table */}
+                <div className="data-panel rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
+                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
+                  </div>
+                  <div className="max-h-[220px] overflow-y-auto">
+                    <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
                   </div>
                 </div>
               </div>
@@ -532,18 +546,6 @@ export default function Home() {
                     </button>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Threat Analysis Table - Full width below */}
-            <div className="data-panel rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
-                <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
-              </div>
-              <div className="max-h-[250px] overflow-y-auto">
-                <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
               </div>
             </div>
 
