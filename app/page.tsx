@@ -70,12 +70,12 @@ export default function Home() {
 
   const summary = isDemo ? SAMPLE_SUMMARY : records.length > 0 ? getDataSummary(records) : null;
 
-  const handleDownload = () => {
+  const handleDownloadCSV = () => {
     const csv = [
-      'mmsi,score,risk,gap_hours,distance_nm,reasons',
+      'mmsi,score,risk,gap_hours,distance_nm,last_lat,last_lon,reappear_lat,reappear_lon,reasons',
       ...darkPeriods.map(
         (dp) =>
-          `${dp.mmsi},${dp.suspicionScore},${dp.riskLevel},${dp.gapHours},${dp.distanceNm},"${dp.reasons.join('; ')}"`
+          `${dp.mmsi},${dp.suspicionScore},${dp.riskLevel},${dp.gapHours.toFixed(1)},${dp.distanceNm.toFixed(1)},${dp.lastLat},${dp.lastLon},${dp.reappearLat},${dp.reappearLon},"${dp.reasons.join('; ')}"`
       ),
     ].join('\n');
 
@@ -86,6 +86,44 @@ export default function Home() {
     a.download = 'ghost_fleet_results.csv';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadJSON = () => {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      totalDarkPeriods: darkPeriods.length,
+      riskSummary: {
+        critical: darkPeriods.filter((d) => d.riskLevel === 'CRITICAL').length,
+        high: darkPeriods.filter((d) => d.riskLevel === 'HIGH').length,
+        medium: darkPeriods.filter((d) => d.riskLevel === 'MEDIUM').length,
+        low: darkPeriods.filter((d) => d.riskLevel === 'LOW').length,
+      },
+      darkPeriods: darkPeriods.map((dp) => ({
+        mmsi: dp.mmsi,
+        suspicionScore: dp.suspicionScore,
+        riskLevel: dp.riskLevel,
+        gapHours: dp.gapHours,
+        distanceNm: dp.distanceNm,
+        impliedSpeedKnots: dp.impliedSpeedKnots,
+        lastPosition: { lat: dp.lastLat, lon: dp.lastLon },
+        reappearPosition: { lat: dp.reappearLat, lon: dp.reappearLon },
+        lastSeenTime: dp.lastSeenTime,
+        reappearTime: dp.reappearTime,
+        reasons: dp.reasons,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ghost_fleet_results.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleReset = () => {
@@ -249,10 +287,22 @@ export default function Home() {
 
             <div className="flex gap-4 flex-wrap">
               <button
-                onClick={handleDownload}
+                onClick={handleDownloadCSV}
                 className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
               >
                 📥 Download CSV
+              </button>
+              <button
+                onClick={handleDownloadJSON}
+                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded transition-colors"
+              >
+                📥 Download JSON
+              </button>
+              <button
+                onClick={handlePrint}
+                className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition-colors print:hidden"
+              >
+                🖨️ Print Report
               </button>
               <button
                 onClick={handleSaveToSupabase}
