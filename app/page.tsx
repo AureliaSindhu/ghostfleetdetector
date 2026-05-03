@@ -14,6 +14,9 @@ import { ScoredDarkPeriod, AISRecord } from '@/types';
 import { SAMPLE_DARK_PERIODS, SAMPLE_SUMMARY } from '@/lib/sampleData';
 import { useSupabase } from '@/lib/supabase/hooks';
 import { saveDarkPeriodsAnon, fetchAllDarkPeriods, fetchUploadHistory } from '@/lib/supabase/anon-data';
+import { LiveFeed } from '@/components/LiveFeed';
+import { ScoringConfig, ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringConfig';
+import { MagicScanner } from '@/components/MagicScanner';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +34,21 @@ export default function Home() {
   // Chart filter state
   const [chartRiskFilter, setChartRiskFilter] = useState<string | null>(null);
   const [chartDurationFilter, setChartDurationFilter] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
+
+  // Live feed state
+  const [isLiveFeedActive, setIsLiveFeedActive] = useState(false);
+
+  // Scoring configuration
+  const [scoringFactors, setScoringFactors] = useState<ScoringFactors>(DEFAULT_SCORING_FACTORS);
+
+  const handleNewLiveAlert = useCallback((alert: ScoredDarkPeriod) => {
+    setDarkPeriods((prev) => [alert, ...prev]);
+  }, []);
+
+  const handleScannerSubscribe = useCallback((email: string, preferences: { criticalOnly: boolean; highAndAbove: boolean; allAlerts: boolean; regions: string[] }) => {
+    console.log('Scanner activated:', email, preferences);
+    // In a real app, this would save to Supabase
+  }, []);
 
   const supabase = useSupabase();
 
@@ -259,30 +277,50 @@ export default function Home() {
               </div>
             )}
 
-            <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
-            <div className="mt-4 flex justify-center gap-4 flex-wrap">
-              <button
-                onClick={handleDemo}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition-colors"
-              >
-                🎮 Run Demo with Sample Data
-              </button>
-              <button
-                onClick={handleLoadAllFromDatabase}
-                disabled={isLoading || dbCount === 0}
-                className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
-              >
-                {isLoading ? '⏳ Loading...' : `🗄️ Load from Database${dbCount > 0 ? ` (${dbCount})` : ''}`}
-              </button>
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
+                <div className="mt-4 flex justify-center gap-4 flex-wrap">
+                  <button
+                    onClick={handleDemo}
+                    className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition-colors"
+                  >
+                    🎮 Run Demo with Sample Data
+                  </button>
+                  <button
+                    onClick={handleLoadAllFromDatabase}
+                    disabled={isLoading || dbCount === 0}
+                    className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? '⏳ Loading...' : `🗄️ Load from Database${dbCount > 0 ? ` (${dbCount})` : ''}`}
+                  </button>
+                </div>
+              </div>
+              <div className="lg:col-span-1">
+                <MagicScanner onSubscribe={handleScannerSubscribe} />
+              </div>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
-            <StatsCards
-              darkPeriods={darkPeriods}
-              totalVessels={summary?.uniqueVessels || 0}
-              totalRecords={summary?.totalRecords || 0}
-            />
+            <div className="grid lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
+                <StatsCards
+                  darkPeriods={darkPeriods}
+                  totalVessels={summary?.uniqueVessels || 0}
+                  totalRecords={summary?.totalRecords || 0}
+                />
+              </div>
+              <div className="lg:col-span-1">
+                <LiveFeed
+                  onNewAlert={handleNewLiveAlert}
+                  isActive={isLiveFeedActive}
+                  onToggle={() => setIsLiveFeedActive(!isLiveFeedActive)}
+                />
+              </div>
+            </div>
+
+            <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
 
             <div className="bg-gray-800 rounded-lg p-4">
               <h2 className="text-xl font-semibold mb-4">🗺️ Dark Periods Map</h2>
