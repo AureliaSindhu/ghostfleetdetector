@@ -40,9 +40,10 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewState, setViewState] = useState<ViewState>({
     longitude: 0,
-    latitude: 0,
-    zoom: 1,
-    pitch: 45,
+    latitude: 20,
+    zoom: 1.5,
+    pitch: 0,
+    bearing: 0,
   });
   const [hasInitialized, setHasInitialized] = useState(false);
 
@@ -54,8 +55,9 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
       setViewState({
         longitude: avgLon,
         latitude: avgLat,
-        zoom: 3,
-        pitch: 45,
+        zoom: 2,
+        pitch: 0,
+        bearing: 0,
       });
       setHasInitialized(true);
     }
@@ -149,6 +151,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
           <MapGL
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle="mapbox://styles/mapbox/dark-v11"
+            projection={{ name: 'mercator' }}
           />
         </DeckGL>
       </div>
