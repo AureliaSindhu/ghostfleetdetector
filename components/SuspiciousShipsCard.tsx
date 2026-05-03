@@ -40,7 +40,7 @@ export function SuspiciousShipsCard({ darkPeriods, onSelectVessel }: SuspiciousS
       <div className="bg-[#0d1f35] rounded-lg p-4 border border-green-500/30" style={{ boxShadow: '0 0 20px rgba(0, 255, 136, 0.1)' }}>
         <div className="flex items-center gap-2 text-green-400">
           <Eye className="w-5 h-5" />
-          <span className="font-mono text-sm">ALL CLEAR - NO CRITICAL THREATS DETECTED</span>
+          <span className="font-sans text-sm">ALL CLEAR - NO CRITICAL THREATS DETECTED</span>
         </div>
       </div>
     );
@@ -51,9 +51,9 @@ export function SuspiciousShipsCard({ darkPeriods, onSelectVessel }: SuspiciousS
       {/* Header */}
       <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-red-400 animate-pulse" />
-        <span className="font-mono text-sm text-red-300 tracking-wider">THREAT MONITOR</span>
+        <span className="font-sans text-sm text-red-300 tracking-wider">THREAT MONITOR</span>
         <div className="flex-1" />
-        <span className="text-[10px] font-mono text-red-400/60">
+        <span className="text-[10px] font-sans text-red-400/60">
           {critical.length + nearingSuspicion.length} VESSELS OF INTEREST
         </span>
       </div>
@@ -64,7 +64,7 @@ export function SuspiciousShipsCard({ darkPeriods, onSelectVessel }: SuspiciousS
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-mono text-red-400/80 tracking-wider">CRITICAL THREATS</span>
+              <span className="text-[10px] font-sans text-red-400/80 tracking-wider">CRITICAL THREATS</span>
             </div>
             <div className="space-y-2">
               {critical.map((vessel) => (
@@ -84,7 +84,7 @@ export function SuspiciousShipsCard({ darkPeriods, onSelectVessel }: SuspiciousS
           <div>
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] font-mono text-amber-400/80 tracking-wider">NEARING THRESHOLD</span>
+              <span className="text-[10px] font-sans text-amber-400/80 tracking-wider">NEARING THRESHOLD</span>
             </div>
             <div className="space-y-2">
               {nearingSuspicion.map((vessel) => (
@@ -124,19 +124,19 @@ function VesselRow({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-cyan-200 text-sm">{vessel.mmsi}</span>
-          <span className={`font-mono text-xs font-bold ${scoreColor}`}>
+          <span className="font-sans text-cyan-200 text-sm">{vessel.mmsi}</span>
+          <span className={`font-sans text-xs font-bold ${scoreColor}`}>
             {vessel.suspicionScore}
           </span>
           {threshold && (
-            <span className="text-[9px] font-mono text-cyan-500/50">
+            <span className="text-[9px] font-sans text-cyan-500/50">
               → {threshold}
             </span>
           )}
         </div>
         <ChevronRight className="w-4 h-4 text-cyan-500/30 group-hover:text-cyan-400 transition-colors" />
       </div>
-      <div className="flex items-center gap-3 mt-1 text-[10px] font-mono text-cyan-500/60">
+      <div className="flex items-center gap-3 mt-1 text-[10px] font-sans text-cyan-500/60">
         <span>{vessel.gapHours.toFixed(0)}h dark</span>
         <span>{vessel.distanceNm.toFixed(0)} nm</span>
         <span className="truncate flex-1">{vessel.reasons[0]}</span>

@@ -165,19 +165,19 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
             <Shuffle className="w-4 h-4 text-purple-400" />
           </div>
           <div>
-            <h3 className="font-mono font-semibold text-cyan-200 tracking-wide text-sm">DATA GENERATOR</h3>
-            <p className="text-[10px] text-cyan-500/50 font-mono">GENERATE SYNTHETIC DARK PERIOD DATA</p>
+            <h3 className="font-sans font-semibold text-cyan-200 tracking-wide text-sm">DATA GENERATOR</h3>
+            <p className="text-[10px] text-cyan-500/50 font-sans">GENERATE SYNTHETIC DARK PERIOD DATA</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-xs text-cyan-400/70 font-mono flex items-center gap-2">
+        <div className="items-center gap-3 flex flex-wrap space-y-2">
+          <label className="text-xs text-cyan-400/70 font-sans flex items-center gap-2">
             COUNT:
             <input
               type="number"
               value={count}
               onChange={(e) => setCount(Math.max(1, Math.min(500, Number(e.target.value))))}
-              className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1.5 text-cyan-300 text-center font-mono text-sm focus:border-cyan-400 focus:outline-none"
+              className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1.5 text-cyan-300 text-center font-sans text-sm focus:border-cyan-400 focus:outline-none"
               min={1}
               max={500}
             />
@@ -186,7 +186,7 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 bg-purple-500/20 border border-purple-500/50 hover:bg-purple-500/30 px-4 py-2 rounded font-mono text-sm text-purple-300 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 bg-purple-500/20 border border-purple-500/50 hover:bg-purple-500/30 px-4 py-2 rounded font-sans text-sm text-purple-300 transition-all disabled:opacity-50"
           >
             {isGenerating ? (
               <>
@@ -203,7 +203,7 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
 
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 bg-[#1e3a5f] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm text-cyan-300 transition-all"
+            className="flex items-center gap-2 bg-[#1e3a5f] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-sans text-sm text-cyan-300 transition-all"
           >
             <Download className="w-3 h-3" />
             EXPORT CSV

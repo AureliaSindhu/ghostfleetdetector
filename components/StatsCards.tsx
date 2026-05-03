@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { ScoredDarkPeriod } from '@/types';
-import { Ship, AlertTriangle, AlertCircle, CheckCircle, Radio, Clock, Navigation } from 'lucide-react';
+import { Ship, AlertTriangle, AlertCircle, CheckCircle, Navigation } from 'lucide-react';
 
 interface StatsCardsProps {
   darkPeriods: ScoredDarkPeriod[];
@@ -44,7 +44,7 @@ export function StatsCards({ darkPeriods, totalVessels, onRiskFilter, activeRisk
   const total = darkPeriods.length || 1;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       <StatCard
         icon={<Ship className="w-4 h-4" />}
         label="VESSELS TRACKED"
@@ -145,7 +145,7 @@ function StatCard({
 
   return (
     <div
-      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden`}
+      className={`relative bg-[#081a2c] rounded-md p-3 border ${classes.border} overflow-hidden`}
       style={{ boxShadow: `0 0 15px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
     >
       <div className={`absolute top-0 left-0 w-6 h-px`} style={{ background: `linear-gradient(90deg, ${glowColor}, transparent)` }} />
@@ -153,13 +153,13 @@ function StatCard({
 
       <div className="flex items-center gap-1.5 mb-1">
         <div className={`${classes.text}`}>{icon}</div>
-        <span className={`text-[10px] font-mono ${classes.text} opacity-70 tracking-wider`}>{label}</span>
+        <span className={`text-[11px] font-sans ${classes.text} opacity-90 tracking-wider`}>{label}</span>
       </div>
-      <div className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>
+      <div className={`text-2xl font-bold font-sans tabular-nums ${classes.text}`}>
         {value}
       </div>
       {subtitle && (
-        <div className="text-[10px] text-cyan-500/50 font-mono mt-1">{subtitle}</div>
+        <div className="text-[11px] text-cyan-200/60 font-sans mt-1">{subtitle}</div>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)` }} />
@@ -199,7 +199,7 @@ function RiskStatCard({
   return (
     <button
       onClick={onClick}
-      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden text-left w-full transition-all ${
+      className={`relative bg-[#081a2c] rounded-md p-3 border ${classes.border} overflow-hidden text-left w-full transition-all ${
         onClick ? 'cursor-pointer hover:bg-[#132743]' : ''
       } ${isActive ? 'ring-2 ring-cyan-400 bg-[#132743]' : ''}`}
       style={{ boxShadow: `0 0 15px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
@@ -210,14 +210,14 @@ function RiskStatCard({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5">
           <div className={`${classes.text} ${pulse ? 'animate-pulse' : ''}`}>{icon}</div>
-          <span className={`text-[10px] font-mono ${classes.text} opacity-70 tracking-wider`}>{label}</span>
+          <span className={`text-[11px] font-sans ${classes.text} opacity-90 tracking-wider`}>{label}</span>
         </div>
-        <span className="text-[9px] font-mono text-cyan-500/40">[{scoreRange}]</span>
+        <span className="text-[10px] font-sans text-cyan-200/50">[{scoreRange}]</span>
       </div>
 
       <div className="flex items-baseline gap-2">
-        <span className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>{count}</span>
-        <span className="text-xs font-mono text-cyan-400/50">{percentage}%</span>
+        <span className={`text-2xl font-bold font-sans tabular-nums ${classes.text}`}>{count}</span>
+        <span className="text-sm font-sans text-cyan-100/65">{percentage}%</span>
       </div>
 
       {/* Progress bar */}
@@ -230,7 +230,7 @@ function RiskStatCard({
 
       {/* Additional stats */}
       {count > 0 && (
-        <div className="mt-1.5 flex justify-between text-[9px] font-mono text-cyan-500/50">
+        <div className="mt-1.5 flex justify-between text-[10px] font-sans text-cyan-100/60">
           <span>AVG: {avgScore} pts</span>
           <span>{avgGap}h gap</span>
         </div>

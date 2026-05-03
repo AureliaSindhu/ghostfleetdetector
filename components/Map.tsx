@@ -1,12 +1,11 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, ArcLayer, GeoJsonLayer } from '@deck.gl/layers';
+import DeckGL, { type DeckGLProps } from '@deck.gl/react';
+import { ScatterplotLayer, ArcLayer } from '@deck.gl/layers';
 import { Map as MapGL } from 'react-map-gl/mapbox';
 import { Maximize2, Minimize2, Globe, Map, Target } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
-import { _GlobeView as GlobeView, MapView } from '@deck.gl/core';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -49,21 +48,24 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
     bearing: 0,
   });
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize view state when dark periods load for the first time
   useEffect(() => {
     if (darkPeriods.length > 0 && !hasInitialized) {
       const avgLat = darkPeriods.reduce((sum, d) => sum + d.lastLat, 0) / darkPeriods.length;
       const avgLon = darkPeriods.reduce((sum, d) => sum + d.lastLon, 0) / darkPeriods.length;
-      setViewState({
-        longitude: avgLon,
-        latitude: avgLat,
-        zoom: 2,
-        pitch: 0,
-        bearing: 0,
-      });
-      setHasInitialized(true);
+      const timer = window.setTimeout(() => {
+        setViewState({
+          longitude: avgLon,
+          latitude: avgLat,
+          zoom: 2,
+          pitch: 0,
+          bearing: 0,
+        });
+        setHasInitialized(true);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [darkPeriods, hasInitialized]);
 
@@ -81,11 +83,16 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
     }
   }, [darkPeriods]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleViewStateChange = useCallback((params: any) => {
-    if (params.viewState) {
-      setViewState(params.viewState);
-    }
+  const handleViewStateChange = useCallback<NonNullable<DeckGLProps['onViewStateChange']>>((params) => {
+    const nextViewState = params.viewState as Partial<ViewState>;
+
+    setViewState((prev) => ({
+      longitude: nextViewState.longitude ?? prev.longitude,
+      latitude: nextViewState.latitude ?? prev.latitude,
+      zoom: nextViewState.zoom ?? prev.zoom,
+      pitch: nextViewState.pitch ?? prev.pitch,
+      bearing: nextViewState.bearing ?? prev.bearing,
+    }));
   }, []);
 
   const layers = useMemo(() => {
@@ -128,8 +135,8 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
   }, [darkPeriods]);
 
   return (
-    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
-      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-full min-h-[400px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
+    <div className={`relative h-full ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
+      <div className={`w-full h-full overflow-hidden border border-cyan-500/20 relative ${isFullscreen ? '' : 'rounded-none'}`}>
         {/* Radar Sweep Overlay - Continuous when live scanning */}
         {isLiveScanning && (
           <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden opacity-60">
@@ -189,7 +196,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
         {isLiveScanning && (
           <div className="absolute top-3 left-3 z-20 bg-[#0d1f35]/90 border border-cyan-500/30 rounded px-3 py-1.5 flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]" />
-            <span className="text-cyan-400 text-xs font-mono tracking-wider">LIVE MONITORING</span>
+            <span className="text-cyan-400 text-xs font-sans tracking-wider">LIVE MONITORING</span>
           </div>
         )}
 
@@ -204,7 +211,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
             const riskColor = obj.riskLevel === 'CRITICAL' ? '#ff3366' : obj.riskLevel === 'HIGH' ? '#f97316' : obj.riskLevel === 'MEDIUM' ? '#eab308' : '#00ff88';
             return {
               html: `
-                <div style="padding:12px;background:linear-gradient(180deg, #0d1f35 0%, #0a1628 100%);color:#fff;border-radius:8px;font-size:12px;min-width:220px;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid rgba(0,212,255,0.3);font-family:monospace;">
+                <div style="padding:12px;background:linear-gradient(180deg, #0d1f35 0%, #0a1628 100%);color:#fff;border-radius:8px;font-size:12px;min-width:220px;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid rgba(0,212,255,0.3);font-family:var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;">
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,212,255,0.2);">
                     <div style="width:8px;height:8px;background:${riskColor};border-radius:50%;box-shadow:0 0 8px ${riskColor};"></div>
                     <span style="color:#00d4ff;font-size:14px;letter-spacing:1px;">MMSI: ${obj.mmsi}</span>
@@ -237,28 +244,29 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
         </DeckGL>
       </div>
 
-      {/* Legend - Naval Style */}
-      <div className="absolute bottom-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 rounded-lg p-3 text-sm">
-        <div className="font-mono text-cyan-400/80 text-xs tracking-wider mb-2 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-          THREAT LEVELS
+      {isFullscreen && (
+        <div className="absolute bottom-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 rounded-md p-3 text-sm shadow-[0_12px_35px_rgba(0,0,0,0.45)]">
+          <div className="font-sans text-cyan-400/80 text-xs tracking-wider mb-2 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+            THREAT LEVELS
+          </div>
+          <div className="space-y-1.5">
+            {RISK_LABELS.map(({ level, color, textColor, label }) => (
+              <div key={level} className="flex items-center gap-2 font-sans text-xs">
+                <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm`} />
+                <span className={`${textColor}`}>{label}</span>
+                <span className="text-cyan-500/50 ml-auto tabular-nums">[{riskCounts[level]}]</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 pt-2 border-t border-cyan-500/20 text-cyan-500/50 text-xs font-sans">
+            TOTAL: {darkPeriods.length} CONTACTS
+          </div>
         </div>
-        <div className="space-y-1.5">
-          {RISK_LABELS.map(({ level, color, textColor, label }) => (
-            <div key={level} className="flex items-center gap-2 font-mono text-xs">
-              <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm`} />
-              <span className={`${textColor}`}>{label}</span>
-              <span className="text-cyan-500/50 ml-auto tabular-nums">[{riskCounts[level]}]</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 pt-2 border-t border-cyan-500/20 text-cyan-500/50 text-xs font-mono">
-          TOTAL: {darkPeriods.length} CONTACTS
-        </div>
-      </div>
+      )}
 
       {/* Map Controls - Naval Style */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <div className={`absolute ${isFullscreen ? 'top-4 right-4' : 'top-20 right-[408px]'} flex flex-col gap-2`}>
         {/* Center on Data */}
         <button
           onClick={handleCenterOnData}
@@ -289,7 +297,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
 
       {/* Fullscreen close hint - Naval Style */}
       {isFullscreen && (
-        <div className="absolute top-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 px-3 py-2 rounded-lg text-sm text-cyan-400/70 font-mono">
+        <div className="absolute top-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 px-3 py-2 rounded-lg text-sm text-cyan-400/70 font-sans">
           <kbd className="bg-cyan-900/50 border border-cyan-500/30 px-1.5 py-0.5 rounded text-cyan-300 text-xs">ESC</kbd>
           <span className="ml-2 text-xs">TO EXIT</span>
         </div>

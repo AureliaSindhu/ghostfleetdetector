@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Radio, Pause, Play, AlertTriangle } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
-import { SAMPLE_DARK_PERIODS } from '@/lib/sampleData';
 
 interface LiveFeedProps {
   onNewAlert: (alert: ScoredDarkPeriod) => void;
@@ -107,16 +106,16 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
               <div className="absolute inset-0 w-4 h-4 bg-red-500/20 rounded-full animate-ping" />
             )}
           </div>
-          <h3 className="text-xs font-mono font-semibold text-cyan-300 tracking-wider whitespace-nowrap">LIVE</h3>
+          <h3 className="text-xs font-sans font-semibold text-cyan-300 tracking-wider whitespace-nowrap">LIVE</h3>
           {isActive && (
-            <span className="text-[9px] bg-red-500/20 border border-red-500/50 text-red-400 px-1.5 py-0.5 rounded font-mono">
+            <span className="text-[9px] bg-red-500/20 border border-red-500/50 text-red-400 px-1.5 py-0.5 rounded font-sans">
               ON
             </span>
           )}
         </div>
         <button
           onClick={onToggle}
-          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-mono transition-all ${
+          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-sans transition-all ${
             isActive
               ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
               : 'bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30'
@@ -127,7 +126,7 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
       </div>
 
       {alerts.length === 0 ? (
-        <div className="text-cyan-500/50 text-xs text-center py-6 font-mono border border-dashed border-cyan-500/20 rounded">
+        <div className="text-cyan-500/50 text-xs text-center py-6 font-sans border border-dashed border-cyan-500/20 rounded">
           {isActive ? '// MONITORING FOR INCOMING SIGNALS...' : '// CLICK START TO BEGIN MONITORING'}
         </div>
       ) : (
@@ -144,9 +143,9 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
               } ${i === 0 ? 'animate-pulse' : ''}`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-cyan-200">{alert.mmsi}</span>
+                <span className="font-sans text-xs text-cyan-200">{alert.mmsi}</span>
                 <span
-                  className={`text-[10px] font-mono font-bold ${
+                  className={`text-[10px] font-sans font-bold ${
                     alert.riskLevel === 'CRITICAL'
                       ? 'text-red-400'
                       : alert.riskLevel === 'HIGH'
@@ -157,7 +156,7 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
                   {alert.riskLevel}
                 </span>
               </div>
-              <div className="text-[10px] text-cyan-400/60 mt-1 font-mono truncate">
+              <div className="text-[10px] text-cyan-400/60 mt-1 font-sans truncate">
                 [{alert.suspicionScore}] {alert.reasons[0]}
               </div>
             </div>
@@ -165,7 +164,7 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
         </div>
       )}
 
-      <div className="mt-3 pt-2 border-t border-cyan-500/20 text-[10px] text-cyan-500/40 flex items-center gap-1 font-mono">
+      <div className="mt-3 pt-2 border-t border-cyan-500/20 text-[10px] text-cyan-500/40 flex items-center gap-1 font-sans">
         <AlertTriangle className="w-3 h-3" />
         SIMULATED FEED // DEMO MODE
       </div>

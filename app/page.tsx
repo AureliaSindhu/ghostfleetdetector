@@ -3,10 +3,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { DarkPeriodsMap } from '@/components/Map';
-import { RiskDistributionChart, DurationHistogram } from '@/components/Charts';
-import { VesselTable } from '@/components/VesselTable';
+import { RiskDistributionChart } from '@/components/Charts';
 import { StatsCards } from '@/components/StatsCards';
-import { VesselDetailModal } from '@/components/VesselDetailModal';
 import { parseAISData, validateAISData, groupByVessel, getDataSummary } from '@/lib/dataLoader';
 import { findAllDarkPeriods } from '@/lib/detector';
 import { scoreAllDarkPeriods, rescoreAllWithFactors } from '@/lib/scorer';
@@ -15,21 +13,19 @@ import { SAMPLE_DARK_PERIODS, SAMPLE_SUMMARY } from '@/lib/sampleData';
 import { useSupabase } from '@/lib/supabase/hooks';
 import { saveDarkPeriodsAnon, fetchAllDarkPeriods, fetchUploadHistory } from '@/lib/supabase/anon-data';
 import { LiveFeed } from '@/components/LiveFeed';
-import { ScoringConfig, ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringConfig';
-import { MagicScanner } from '@/components/MagicScanner';
+import { ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringConfig';
 import { DataGenerator } from '@/components/DataGenerator';
 import { RadarOverlay } from '@/components/RadarOverlay';
-import { ChatBox } from '@/components/ChatBox';
-import { SuspiciousShipsCard } from '@/components/SuspiciousShipsCard';
 import { SettingsModal, SettingsButton } from '@/components/SettingsModal';
+import { ChatBox } from '@/components/ChatBox';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [records, setRecords] = useState<AISRecord[]>([]);
-  const [darkPeriods, setDarkPeriods] = useState<ScoredDarkPeriod[]>([]);
+  const [darkPeriods, setDarkPeriods] = useState<ScoredDarkPeriod[]>(SAMPLE_DARK_PERIODS);
   const [selectedPeriod, setSelectedPeriod] = useState<ScoredDarkPeriod | null>(null);
   const [minGapHours, setMinGapHours] = useState(6);
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemo] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [uploadHistory, setUploadHistory] = useState<Array<{ id: string; filename: string | null; dark_periods_found: number; created_at: string }>>([]);
@@ -38,25 +34,20 @@ export default function Home() {
 
   // Chart filter state
   const [chartRiskFilter, setChartRiskFilter] = useState<string | null>(null);
-  const [chartDurationFilter, setChartDurationFilter] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
 
   // Live feed state
   const [isLiveFeedActive, setIsLiveFeedActive] = useState(false);
 
   // Scoring configuration
   const [scoringFactors, setScoringFactors] = useState<ScoringFactors>(DEFAULT_SCORING_FACTORS);
-  const [scoreChangeNotification, setScoreChangeNotification] = useState<{
-    upgraded: number;
-    downgraded: number;
-    visible: boolean;
-  } | null>(null);
-
-  // Radar scan animation state
   const [isRadarScanning, setIsRadarScanning] = useState(false);
+  const [scanId, setScanId] = useState(0);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   // Settings modal state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  type RightPanel = 'threats' | 'analytics' | 'ingest' | 'ai';
+  const [rightPanel, setRightPanel] = useState<RightPanel>('threats');
 
   // Update current time every second for real-time feel
   useEffect(() => {
@@ -69,33 +60,13 @@ export default function Home() {
     if (darkPeriods.length > 0) {
       const rescored = rescoreAllWithFactors(darkPeriods, scoringFactors);
 
-      // Track risk level changes
-      let upgraded = 0;
-      let downgraded = 0;
-      const riskOrder = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
-
-      rescored.forEach((newDp, i) => {
-        const oldDp = darkPeriods[i];
-        if (oldDp) {
-          const oldIdx = riskOrder.indexOf(oldDp.riskLevel);
-          const newIdx = riskOrder.indexOf(newDp.riskLevel);
-          if (newIdx > oldIdx) upgraded++;
-          if (newIdx < oldIdx) downgraded++;
-        }
-      });
-
       const scoresChanged = rescored.some(
         (dp, i) => dp.suspicionScore !== darkPeriods[i]?.suspicionScore
       );
 
       if (scoresChanged) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDarkPeriods(rescored);
-        if (upgraded > 0 || downgraded > 0) {
-          setScoreChangeNotification({ upgraded, downgraded, visible: true });
-          setTimeout(() => {
-            setScoreChangeNotification((prev) => prev ? { ...prev, visible: false } : null);
-          }, 3000);
-        }
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,18 +76,7 @@ export default function Home() {
     setDarkPeriods((prev) => [alert, ...prev]);
   }, []);
 
-  const handleScannerSubscribe = useCallback((email: string, preferences: { criticalOnly: boolean; highAndAbove: boolean; allAlerts: boolean; regions: string[] }) => {
-    console.log('Scanner activated:', email, preferences);
-    // In a real app, this would save to Supabase
-  }, []);
-
   const supabase = useSupabase();
-
-  // Auto-load demo data on mount for better first impression
-  useEffect(() => {
-    setDarkPeriods(SAMPLE_DARK_PERIODS);
-    setIsDemo(true);
-  }, []);
 
   // Load history and count on mount
   useEffect(() => {
@@ -151,13 +111,17 @@ export default function Home() {
   );
 
   const handleDemo = () => {
+    setDarkPeriods(SAMPLE_DARK_PERIODS);
+    setRecords([]);
+    setSelectedPeriod(SAMPLE_DARK_PERIODS[0] ?? null);
+    setChartRiskFilter(null);
+    setIsDemo(true);
+    setRightPanel('threats');
+    setScanId((id) => id + 1);
     setIsRadarScanning(true);
   };
 
   const handleRadarScanComplete = () => {
-    setDarkPeriods(SAMPLE_DARK_PERIODS);
-    setRecords([]);
-    setIsDemo(true);
     setIsRadarScanning(false);
   };
 
@@ -171,18 +135,8 @@ export default function Home() {
       result = result.filter((dp) => dp.riskLevel === chartRiskFilter);
     }
 
-    if (chartDurationFilter.min != null && chartDurationFilter.max != null) {
-      result = result.filter(
-        (dp) => dp.gapHours >= chartDurationFilter.min! && dp.gapHours < chartDurationFilter.max!
-      );
-    }
-
     return result;
-  }, [darkPeriods, chartRiskFilter, chartDurationFilter]);
-
-  const handleDurationFilter = (min: number | null, max: number | null) => {
-    setChartDurationFilter({ min, max });
-  };
+  }, [darkPeriods, chartRiskFilter]);
 
   const handleDownloadCSV = () => {
     const csv = [
@@ -200,44 +154,6 @@ export default function Home() {
     a.download = 'ghost_fleet_results.csv';
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadJSON = () => {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      totalDarkPeriods: darkPeriods.length,
-      riskSummary: {
-        critical: darkPeriods.filter((d) => d.riskLevel === 'CRITICAL').length,
-        high: darkPeriods.filter((d) => d.riskLevel === 'HIGH').length,
-        medium: darkPeriods.filter((d) => d.riskLevel === 'MEDIUM').length,
-        low: darkPeriods.filter((d) => d.riskLevel === 'LOW').length,
-      },
-      darkPeriods: darkPeriods.map((dp) => ({
-        mmsi: dp.mmsi,
-        suspicionScore: dp.suspicionScore,
-        riskLevel: dp.riskLevel,
-        gapHours: dp.gapHours,
-        distanceNm: dp.distanceNm,
-        impliedSpeedKnots: dp.impliedSpeedKnots,
-        lastPosition: { lat: dp.lastLat, lon: dp.lastLon },
-        reappearPosition: { lat: dp.reappearLat, lon: dp.reappearLon },
-        lastSeenTime: dp.lastSeenTime,
-        reappearTime: dp.reappearTime,
-        reasons: dp.reasons,
-      })),
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'ghost_fleet_results.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   const handleReset = () => {
@@ -266,6 +182,7 @@ export default function Home() {
   };
 
   const handleLoadFromHistory = async (batchId: string) => {
+    void batchId;
     setIsLoading(true);
     const periods = await fetchAllDarkPeriods(supabase, { limit: 100 });
     if (periods.length > 0) {
@@ -288,340 +205,271 @@ export default function Home() {
     setIsLoading(false);
   };
 
+
+  /* ── Render ─────────────────────────────────────────────────── */
+  const TC: Record<string, string> = { CRITICAL: '#ff3366', HIGH: '#f97316', MEDIUM: '#ffb800', LOW: '#00ff88' };
+  const critical = darkPeriods.filter(d => d.riskLevel === 'CRITICAL').length;
+  const high = darkPeriods.filter(d => d.riskLevel === 'HIGH').length;
+  const medium = darkPeriods.filter(d => d.riskLevel === 'MEDIUM').length;
+  const low = darkPeriods.filter(d => d.riskLevel === 'LOW').length;
+  const visibleThreats = chartRiskFilter
+    ? darkPeriods.filter(d => d.riskLevel === chartRiskFilter)
+    : darkPeriods;
+  const topThreats = [...visibleThreats]
+    .sort((a, b) => b.suspicionScore - a.suspicionScore)
+    .slice(0, 8);
+
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white p-6 tactical-grid relative">
-      {/* Radar scanning overlay */}
-      <RadarOverlay isScanning={isRadarScanning} onScanComplete={handleRadarScanComplete} />
+    <div className="h-screen overflow-hidden bg-[#06111f] text-white relative">
+      <RadarOverlay isScanning={isRadarScanning} scanId={scanId} onScanComplete={handleRadarScanComplete} />
 
-      {/* Scan lines effect */}
-      <div className="fixed inset-0 pointer-events-none z-[5] scan-lines" />
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Naval Header */}
-        <header className="mb-8 relative">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_#00d4ff] animate-pulse" />
-                <span className="text-cyan-400/70 font-mono text-xs tracking-widest">MARITIME SURVEILLANCE SYSTEM</span>
+      <main className="absolute inset-0 z-0">
+        {darkPeriods.length > 0 ? (
+          <DarkPeriodsMap darkPeriods={darkPeriods} onSelectPeriod={setSelectedPeriod} isLiveScanning={isLiveFeedActive} />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-[#071322]">
+            <div className="max-w-sm text-center">
+              <div className="text-sm font-sans tracking-[0.2em] text-cyan-200/70">NO AIS DATA LOADED</div>
+              <div className="mt-3 text-sm text-slate-300">Run the demo scan or load AIS data to start mapping blackout events.</div>
+              <div className="mt-5 flex justify-center gap-3">
+                <button onClick={handleDemo} className="px-4 py-2 text-xs font-sans tracking-widest border border-cyan-400/50 bg-cyan-400/10 text-cyan-100">
+                  DEMO SCAN
+                </button>
+                <button onClick={() => setRightPanel('ingest')} className="px-4 py-2 text-xs font-sans tracking-widest border border-slate-500/60 text-slate-200">
+                  LOAD DATA
+                </button>
               </div>
-              <h1 className="text-4xl font-bold mb-2 text-white tracking-tight">
-                GHOST FLEET DETECTOR
-              </h1>
-              <p className="text-cyan-300/60 font-mono text-sm">
-                DETECTING DARK VESSELS // TRACKING AIS GAPS // MONITORING SUSPICIOUS ACTIVITY
-              </p>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="text-right font-mono">
-                <div className="text-cyan-400 text-2xl tabular-nums">
-                  {currentTime.toLocaleTimeString('en-US', { hour12: false })}
-                </div>
-                <div className="text-cyan-300/50 text-xs">
-                  {currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}
-                </div>
-                <div className="mt-2 flex items-center gap-2 justify-end">
-                  <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_#22c55e]" />
-                  <span className="text-green-400/80 text-xs">SYSTEM ONLINE</span>
-                </div>
-              </div>
-              <SettingsButton onClick={() => setIsSettingsOpen(true)} />
             </div>
           </div>
-          {/* Decorative line */}
-          <div className="mt-4 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-        </header>
+        )}
+      </main>
 
-        {darkPeriods.length === 0 ? (
-          <div>
-            <div className="mb-4 flex items-center gap-4 flex-wrap">
-              <label className="text-sm text-cyan-300/80 font-mono flex items-center gap-2">
-                <span className="text-cyan-400/60">MIN_DARK_PERIOD:</span>
-                <input
-                  type="number"
-                  value={minGapHours}
-                  onChange={(e) => setMinGapHours(Number(e.target.value))}
-                  className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1 text-cyan-300 font-mono text-center focus:border-cyan-400 focus:outline-none"
-                  min={1}
-                  max={72}
-                />
-                <span className="text-cyan-400/60">HRS</span>
-              </label>
-              {uploadHistory.length > 0 && (
-                <button
-                  onClick={() => setShowHistory(!showHistory)}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1"
-                >
-                  <span className="w-2 h-2 bg-cyan-400/50 rounded-full" />
-                  {showHistory ? 'HIDE' : 'SHOW'} HISTORY [{uploadHistory.length}]
-                </button>
-              )}
+      <header className="absolute top-0 inset-x-0 z-30 h-16 border-b border-slate-700/80 bg-[#07111d]/95 backdrop-blur">
+        <div className="h-full flex items-center gap-5 px-5">
+          <div className="w-[320px] flex items-center gap-3">
+            <div className={`h-2.5 w-2.5 rounded-full ${critical > 0 ? 'bg-red-400' : 'bg-cyan-300'}`} />
+            <div>
+              <div className="font-sans text-sm font-semibold tracking-[0.16em] text-cyan-100">GHOST FLEET DETECTOR</div>
+              <div className="mt-0.5 font-sans text-[10px] tracking-widest text-slate-400">
+                {currentTime.toLocaleTimeString('en-US', { hour12: false })} UTC
+              </div>
             </div>
+          </div>
 
-            {showHistory && uploadHistory.length > 0 && (
-              <div className="mb-6 data-panel rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3 text-cyan-300 font-mono">// PREVIOUS ANALYSES</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {uploadHistory.map((batch) => (
-                    <button
-                      key={batch.id}
-                      onClick={() => handleLoadFromHistory(batch.id)}
-                      className="w-full text-left bg-[#1e3a5f]/50 hover:bg-[#2d5a87]/50 border border-cyan-500/20 hover:border-cyan-400/40 rounded p-3 transition-all"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-mono text-cyan-200">{batch.filename || 'UNNAMED'}</span>
-                        <span className="text-sm text-cyan-400/70 font-mono">
-                          {batch.dark_periods_found} DETECTIONS
-                        </span>
-                      </div>
-                      <div className="text-xs text-cyan-500/50 mt-1 font-mono">
-                        {new Date(batch.created_at).toLocaleString().toUpperCase()}
-                      </div>
+          <div className="flex flex-1 items-center gap-3">
+            {[
+              { label: 'Vessels', value: summary?.uniqueVessels ?? 0, color: '#67e8f9' },
+              { label: 'Blackouts', value: darkPeriods.length, color: '#a78bfa' },
+              { label: 'Critical', value: critical, color: '#fb7185' },
+              { label: 'High', value: high, color: '#fb923c' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="min-w-24">
+                <div className="font-sans text-xl font-semibold tabular-nums" style={{ color }}>{value}</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isLiveFeedActive && <span className="rounded border border-green-400/40 px-2 py-1 text-[10px] font-sans text-green-300">LIVE</span>}
+            {darkPeriods.length > 0 && (
+              <>
+                <button onClick={handleDownloadCSV} className="px-3 py-1.5 text-xs font-sans text-cyan-100 border border-cyan-400/30 hover:bg-cyan-400/10">EXPORT</button>
+                <button onClick={handleSaveToSupabase} disabled={isSaving || saveStatus === 'saved'} className="px-3 py-1.5 text-xs font-sans text-slate-200 border border-slate-500/50 disabled:opacity-50">
+                  {isSaving ? 'SAVING' : saveStatus === 'saved' ? 'SAVED' : 'SAVE'}
+                </button>
+                <button onClick={handleReset} className="px-3 py-1.5 text-xs font-sans text-red-200 border border-red-400/30 hover:bg-red-400/10">RESET</button>
+              </>
+            )}
+            <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+          </div>
+        </div>
+      </header>
+
+      <aside className="absolute left-4 top-20 bottom-4 z-20 w-[340px] rounded-md border border-slate-700/90 bg-[#081524]/95 shadow-2xl backdrop-blur flex flex-col overflow-hidden">
+        <div className="border-b border-slate-700/80 p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-sans font-semibold tracking-[0.14em] text-cyan-100">DETECTIONS</h2>
+            <span className="text-xs text-slate-400">{filteredDarkPeriods.length}/{darkPeriods.length}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button onClick={handleDemo} className="px-3 py-2 text-xs font-sans border border-cyan-400/30 bg-cyan-400/10 text-cyan-100">DEMO</button>
+            <button onClick={() => setRightPanel('ingest')} className="px-3 py-2 text-xs font-sans border border-slate-600 text-slate-200">LOAD</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 p-4 border-b border-slate-700/80">
+          {[
+            ['Critical', critical, TC.CRITICAL],
+            ['High', high, TC.HIGH],
+            ['Medium', medium, TC.MEDIUM],
+            ['Low', low, TC.LOW],
+          ].map(([label, value, color]) => (
+            <button
+              key={label}
+              onClick={() => setChartRiskFilter(chartRiskFilter === label.toString().toUpperCase() ? null : label.toString().toUpperCase())}
+              className="rounded border border-slate-700/80 bg-slate-950/35 px-3 py-2 text-left hover:bg-slate-800/60"
+            >
+              <div className="font-sans text-lg font-semibold tabular-nums" style={{ color: color as string }}>{value}</div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-auto p-2">
+          {topThreats.length > 0 ? (
+            topThreats.map((dp) => {
+              const selected = selectedPeriod?.mmsi === dp.mmsi && selectedPeriod?.lastSeenTime === dp.lastSeenTime;
+              const color = TC[dp.riskLevel];
+              return (
+                <button
+                  key={`${dp.mmsi}-${dp.lastSeenTime}`}
+                  onClick={() => setSelectedPeriod(dp)}
+                  className={`mb-2 w-full rounded border px-3 py-3 text-left transition ${selected ? 'bg-cyan-400/10 border-cyan-300/50' : 'bg-slate-950/35 border-slate-700/70 hover:bg-slate-800/60'}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-sans text-sm text-slate-100">{dp.mmsi}</span>
+                    <span className="text-xs font-sans font-semibold" style={{ color }}>{dp.suspicionScore}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
+                    <span style={{ color }}>{dp.riskLevel}</span>
+                    <span>{dp.gapHours.toFixed(0)}h dark</span>
+                    <span>{dp.distanceNm.toFixed(0)} nm</span>
+                  </div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="p-6 text-center text-sm text-slate-400">No detections match the current filter.</div>
+          )}
+        </div>
+      </aside>
+
+      <aside className="absolute right-4 top-20 bottom-4 z-20 w-[380px] rounded-md border border-slate-700/90 bg-[#081524]/95 shadow-2xl backdrop-blur flex flex-col overflow-hidden">
+        <div className="border-b border-slate-700/80 p-3">
+          <div className="grid grid-cols-4 gap-1 rounded bg-slate-950/50 p-1">
+            {(['threats', 'analytics', 'ingest', 'ai'] as RightPanel[]).map((panel) => (
+              <button
+                key={panel}
+                onClick={() => setRightPanel(panel)}
+                className={`px-2 py-2 text-xs font-sans uppercase tracking-wider ${rightPanel === panel ? 'bg-cyan-400/15 text-cyan-100' : 'text-slate-400 hover:text-slate-100'}`}
+              >
+                {panel === 'threats' ? 'Detail' : panel === 'analytics' ? 'Stats' : panel === 'ingest' ? 'Data' : 'AI'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto p-4">
+          {rightPanel === 'threats' && (
+            <div className="space-y-4">
+              {selectedPeriod ? (
+                <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4">
+                  <div className="text-xs uppercase tracking-wider text-slate-400">Selected vessel</div>
+                  <div className="mt-1 font-sans text-2xl text-cyan-100">{selectedPeriod.mmsi}</div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="text-slate-500">Risk</div>
+                      <div className="font-sans font-semibold" style={{ color: TC[selectedPeriod.riskLevel] }}>{selectedPeriod.riskLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Score</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.suspicionScore}/100</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Dark</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.gapHours.toFixed(1)}h</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Distance</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.distanceNm.toFixed(0)} nm</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {selectedPeriod.reasons.slice(0, 3).map((reason) => (
+                      <div key={reason} className="text-sm text-slate-300">{reason}</div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4 text-sm text-slate-400">
+                  Select a vessel from the left panel or the map.
+                </div>
+              )}
+              <LiveFeed onNewAlert={handleNewLiveAlert} isActive={isLiveFeedActive} onToggle={() => setIsLiveFeedActive(v => !v)} />
+            </div>
+          )}
+
+          {rightPanel === 'analytics' && (
+            <div className="space-y-4">
+              <StatsCards darkPeriods={darkPeriods} totalVessels={summary?.uniqueVessels ?? 0} totalRecords={summary?.totalRecords ?? 0} />
+              <div className="rounded-md border border-slate-700 bg-slate-950/35 p-3">
+                <div className="mb-2 text-xs uppercase tracking-wider text-slate-400">Risk distribution</div>
+                <RiskDistributionChart darkPeriods={darkPeriods} onRiskFilter={setChartRiskFilter} activeRiskFilter={chartRiskFilter} />
+              </div>
+            </div>
+          )}
+
+          {rightPanel === 'ingest' && (
+            <div className="space-y-4">
+              <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4">
+                <div className="mb-3 text-xs uppercase tracking-wider text-slate-400">Load AIS data</div>
+                <div className="mb-3 flex items-center gap-2 text-sm text-slate-300">
+                  <span>Min gap</span>
+                  <input
+                    type="number"
+                    value={minGapHours}
+                    onChange={e => setMinGapHours(Number(e.target.value))}
+                    className="w-16 rounded border border-slate-600 bg-slate-950 px-2 py-1 font-sans text-sm text-slate-100"
+                    min={1}
+                    max={72}
+                  />
+                  <span>hours</span>
+                </div>
+                <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={handleDemo} className="rounded border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-xs font-sans text-cyan-100">DEMO SCAN</button>
+                <button onClick={handleLoadAllFromDatabase} disabled={isLoading || dbCount === 0} className="rounded border border-slate-600 px-3 py-3 text-xs font-sans text-slate-200 disabled:opacity-40">
+                  {isLoading ? 'LOADING' : `DATABASE ${dbCount || ''}`}
+                </button>
+              </div>
+
+              <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4">
+                <div className="mb-3 text-xs uppercase tracking-wider text-slate-400">Generate test data</div>
+                <DataGenerator onGenerate={(data) => { setDarkPeriods(data); setRecords([]); setSelectedPeriod(data[0] ?? null); setIsDemo(false); setChartRiskFilter(null); setRightPanel('threats'); }} />
+              </div>
+
+              {uploadHistory.length > 0 && (
+                <div className="rounded-md border border-slate-700 bg-slate-950/35">
+                  <button onClick={() => setShowHistory(v => !v)} className="w-full px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-300">
+                    Previous analyses [{uploadHistory.length}] {showHistory ? '▲' : '▼'}
+                  </button>
+                  {showHistory && uploadHistory.slice(0, 5).map(batch => (
+                    <button key={batch.id} onClick={() => handleLoadFromHistory(batch.id)} className="w-full border-t border-slate-700 px-4 py-3 text-left text-sm text-slate-300 hover:bg-slate-800/60">
+                      <span className="block truncate">{batch.filename ?? 'Unnamed upload'}</span>
+                      <span className="text-xs text-slate-500">{batch.dark_periods_found} detections</span>
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
-
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
-                <div className="mt-4 flex justify-center gap-4 flex-wrap">
-                  <button
-                    onClick={handleDemo}
-                    className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] hover:shadow-[0_0_25px_rgba(0,212,255,0.5)] flex items-center gap-2"
-                  >
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    INITIALIZE DEMO SCAN
-                  </button>
-                  <button
-                    onClick={handleLoadAllFromDatabase}
-                    disabled={isLoading || dbCount === 0}
-                    className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                        LOADING...
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-cyan-400">▸</span>
-                        LOAD DATABASE {dbCount > 0 && `[${dbCount}]`}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <MagicScanner onSubscribe={handleScannerSubscribe} />
-              </div>
+              )}
             </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Top row: Stats and Live Feed */}
-            <div className="grid lg:grid-cols-5 gap-3 items-start">
-              <div className="lg:col-span-4">
-                <StatsCards
-                  darkPeriods={darkPeriods}
-                  totalVessels={summary?.uniqueVessels || 0}
-                  totalRecords={summary?.totalRecords || 0}
-                  onRiskFilter={setChartRiskFilter}
-                  activeRiskFilter={chartRiskFilter}
-                />
-              </div>
-              <div className="lg:col-span-1">
-                <LiveFeed
-                  onNewAlert={handleNewLiveAlert}
-                  isActive={isLiveFeedActive}
-                  onToggle={() => setIsLiveFeedActive(!isLiveFeedActive)}
-                />
-              </div>
+          )}
+
+          {rightPanel === 'ai' && (
+            <div className="h-full min-h-[520px]">
+              <ChatBox darkPeriods={filteredDarkPeriods} />
             </div>
+          )}
+        </div>
+      </aside>
 
-            {/* Score change notification */}
-            {scoreChangeNotification?.visible && (
-              <div className="fixed top-4 right-4 z-50 data-panel rounded-lg shadow-[0_0_30px_rgba(0,212,255,0.2)] p-4 max-w-sm border-l-4 border-l-cyan-400">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded bg-cyan-500/20 flex items-center justify-center">
-                    <span className="text-cyan-400 text-lg">◉</span>
-                  </div>
-                  <div>
-                    <p className="font-mono text-cyan-200 tracking-wide">RISK RECALCULATED</p>
-                    <div className="text-sm mt-2 space-y-1 font-mono">
-                      {scoreChangeNotification.upgraded > 0 && (
-                        <p className="text-red-400 flex items-center gap-2">
-                          <span>▲</span> {scoreChangeNotification.upgraded} VESSEL{scoreChangeNotification.upgraded > 1 ? 'S' : ''} ELEVATED
-                        </p>
-                      )}
-                      {scoreChangeNotification.downgraded > 0 && (
-                        <p className="text-green-400 flex items-center gap-2">
-                          <span>▼</span> {scoreChangeNotification.downgraded} VESSEL{scoreChangeNotification.downgraded > 1 ? 'S' : ''} REDUCED
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Vessel Detail Modal */}
-            {selectedPeriod && (
-              <VesselDetailModal
-                period={selectedPeriod}
-                onClose={() => setSelectedPeriod(null)}
-              />
-            )}
-
-            {/* Main content: Map + Table on left, Suspicious Ships + Charts on right */}
-            <div className="grid lg:grid-cols-5 gap-4">
-              {/* Left side: Tactical Map + Threat Analysis */}
-              <div className="lg:col-span-3 space-y-4">
-                <div className="data-panel rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
-                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
-                  </div>
-                  <div className="h-[350px]">
-                    <DarkPeriodsMap
-                      darkPeriods={darkPeriods}
-                      onSelectPeriod={setSelectedPeriod}
-                      isLiveScanning={isLiveFeedActive}
-                    />
-                  </div>
-                </div>
-
-                {/* Threat Analysis Table */}
-                <div className="data-panel rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
-                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
-                  </div>
-                  <div className="max-h-[220px] overflow-y-auto">
-                    <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right side: Suspicious Ships + Charts */}
-              <div className="lg:col-span-2 space-y-4">
-                {/* Suspicious Ships Card */}
-                <SuspiciousShipsCard
-                  darkPeriods={darkPeriods}
-                  onSelectVessel={setSelectedPeriod}
-                />
-
-                {/* Charts in a 2-column grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <RiskDistributionChart
-                    darkPeriods={darkPeriods}
-                    onRiskFilter={setChartRiskFilter}
-                    activeRiskFilter={chartRiskFilter}
-                  />
-                  <DurationHistogram
-                    darkPeriods={darkPeriods}
-                    onDurationFilter={handleDurationFilter}
-                    activeDurationFilter={chartDurationFilter}
-                  />
-                </div>
-
-                {/* Filter indicator */}
-                {(chartRiskFilter || chartDurationFilter.min != null) && (
-                  <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-2 flex items-center justify-between">
-                    <span className="text-cyan-300 text-xs font-mono">
-                      FILTERED: {filteredDarkPeriods.length}/{darkPeriods.length}
-                      {chartRiskFilter && ` // ${chartRiskFilter}`}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setChartRiskFilter(null);
-                        setChartDurationFilter({ min: null, max: null });
-                      }}
-                      className="text-[10px] bg-cyan-600/50 hover:bg-cyan-500/50 border border-cyan-400/30 px-2 py-0.5 rounded font-mono"
-                    >
-                      CLEAR
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Settings Modal */}
-            <SettingsModal
-              isOpen={isSettingsOpen}
-              onClose={() => setIsSettingsOpen(false)}
-              scoringFactors={scoringFactors}
-              onScoringChange={setScoringFactors}
-            />
-
-            <div className="flex gap-3 flex-wrap data-panel rounded-lg p-4">
-              <div className="text-cyan-400/60 font-mono text-xs mr-2 self-center">EXPORT:</div>
-              <button
-                onClick={handleDownloadCSV}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-cyan-400">▼</span> CSV
-              </button>
-              <button
-                onClick={handleDownloadJSON}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-cyan-400">▼</span> JSON
-              </button>
-              <button
-                onClick={handlePrint}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all print:hidden flex items-center gap-2"
-              >
-                <span className="text-cyan-400">◎</span> PRINT
-              </button>
-              <div className="w-px h-8 bg-cyan-500/20 self-center mx-2" />
-              <button
-                onClick={handleSaveToSupabase}
-                disabled={isSaving || saveStatus === 'saved'}
-                className="bg-green-600/30 hover:bg-green-500/40 border border-green-500/50 hover:border-green-400/70 px-4 py-2 rounded font-mono text-sm transition-all disabled:opacity-50 flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
-                    SAVING...
-                  </>
-                ) : saveStatus === 'saved' ? (
-                  <>
-                    <span className="text-green-400">✓</span> SAVED
-                  </>
-                ) : (
-                  <>
-                    <span className="text-green-400">▲</span> SAVE TO DB
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleReset}
-                className="bg-amber-600/30 hover:bg-amber-500/40 border border-amber-500/50 hover:border-amber-400/70 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-amber-400">↻</span> NEW SCAN
-              </button>
-            </div>
-            {saveStatus === 'error' && (
-              <p className="text-red-400 text-sm mt-2 font-mono">
-                ⚠ DATABASE CONNECTION FAILED // DATA AVAILABLE LOCALLY
-              </p>
-            )}
-
-            <DataGenerator onGenerate={(data) => {
-              setDarkPeriods(data);
-              setRecords([]);
-              setIsDemo(false);
-            }} />
-          </div>
-        )}
-
-        {/* AI Chat Assistant */}
-        {darkPeriods.length > 0 && <ChatBox darkPeriods={darkPeriods} />}
+      <div className="absolute bottom-3 left-[372px] z-20 rounded border border-slate-700/80 bg-[#07111d]/90 px-3 py-2 text-xs text-slate-400 backdrop-blur">
+        AIS parser · threat scorer · Supabase {supabase ? 'online' : 'offline'}
       </div>
-    </main>
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} scoringFactors={scoringFactors} onScoringChange={setScoringFactors} />
+    </div>
   );
 }

@@ -1,8 +1,6 @@
 import { Resend } from 'resend';
 import { NextRequest, NextResponse } from 'next/server';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: NextRequest) {
   const { to, subject, report, vesselData } = await request.json();
 
@@ -10,13 +8,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (!resendApiKey) {
+    return NextResponse.json({ error: 'RESEND_API_KEY is not configured' }, { status: 500 });
+  }
+
+  const resend = new Resend(resendApiKey);
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'Ghost Fleet Detector <alerts@resend.dev>',
       to: [to],
       subject: subject || `Intelligence Report: Vessel ${vesselData?.mmsi || 'Unknown'}`,
       html: `
-        <div style="font-family: 'Courier New', monospace; background: #0a1628; color: #67e8f9; padding: 24px; border-radius: 8px;">
+        <div style="font-family: Arial, Helvetica, sans-serif; background: #0a1628; color: #67e8f9; padding: 24px; border-radius: 8px;">
           <div style="border-bottom: 1px solid #164e63; padding-bottom: 16px; margin-bottom: 16px;">
             <h1 style="color: #22d3ee; margin: 0; font-size: 20px;">GHOST FLEET DETECTOR</h1>
             <p style="color: #0891b2; margin: 4px 0 0; font-size: 12px;">MARITIME INTELLIGENCE REPORT</p>
