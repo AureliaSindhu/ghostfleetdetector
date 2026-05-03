@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, ArcLayer } from '@deck.gl/layers';
 import { Map as MapGL } from 'react-map-gl/mapbox';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Globe, Map } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -38,6 +38,7 @@ interface MapProps {
 
 export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGlobeView, setIsGlobeView] = useState(false);
   const [viewState, setViewState] = useState<ViewState>({
     longitude: 0,
     latitude: 20,
@@ -151,7 +152,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
           <MapGL
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle="mapbox://styles/mapbox/dark-v11"
-            projection={{ name: 'mercator' }}
+            projection={{ name: isGlobeView ? 'globe' : 'mercator' }}
           />
         </DeckGL>
       </div>
@@ -170,14 +171,26 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
         </div>
       </div>
 
-      {/* Fullscreen Toggle */}
-      <button
-        onClick={() => setIsFullscreen(!isFullscreen)}
-        className="absolute top-4 right-4 bg-gray-900/90 backdrop-blur p-2 rounded-lg text-gray-300 hover:text-white transition-colors"
-        title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-      >
-        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-      </button>
+      {/* Map Controls */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        {/* Globe/Flat Toggle */}
+        <button
+          onClick={() => setIsGlobeView(!isGlobeView)}
+          className="bg-gray-900/90 backdrop-blur p-2 rounded-lg text-gray-300 hover:text-white transition-colors"
+          title={isGlobeView ? 'Switch to flat view' : 'Switch to globe view'}
+        >
+          {isGlobeView ? <Map className="w-5 h-5" /> : <Globe className="w-5 h-5" />}
+        </button>
+
+        {/* Fullscreen Toggle */}
+        <button
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="bg-gray-900/90 backdrop-blur p-2 rounded-lg text-gray-300 hover:text-white transition-colors"
+          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+        </button>
+      </div>
 
       {/* Fullscreen close with Escape hint */}
       {isFullscreen && (
