@@ -97,8 +97,25 @@ export function RiskDistributionChart({
             cx="50%"
             cy="50%"
             outerRadius={80}
-            label={({ name, value }) => `${name}: ${value}`}
-            labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)' }}
+            label={({ name, value, cx, cy, midAngle, outerRadius }) => {
+              const RADIAN = Math.PI / 180;
+              const radius = outerRadius + 20;
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              return (
+                <text
+                  x={x}
+                  y={y}
+                  fill="#67e8f9"
+                  textAnchor={x > cx ? 'start' : 'end'}
+                  dominantBaseline="central"
+                  style={{ fontSize: '10px', fontFamily: 'monospace' }}
+                >
+                  {`${name}: ${value}`}
+                </text>
+              );
+            }}
+            labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)', strokeWidth: 1 }}
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onRiskFilter ? 'pointer' : 'default' }}
             isAnimationActive={false}
@@ -195,11 +212,9 @@ export function DurationHistogram({
                 fill={isBarActive(entry.min, entry.max) ? '#22d3ee' : '#0891b2'}
                 opacity={
                   activeDurationFilter?.min != null && !isBarActive(entry.min, entry.max)
-                    ? 0.3
+                    ? 0.4
                     : 1
                 }
-                stroke={isBarActive(entry.min, entry.max) ? '#00d4ff' : 'none'}
-                strokeWidth={isBarActive(entry.min, entry.max) ? 2 : 0}
               />
             ))}
           </Bar>

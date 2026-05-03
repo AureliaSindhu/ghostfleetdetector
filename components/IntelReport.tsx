@@ -29,7 +29,7 @@ export function IntelReport({ darkPeriod, weatherData, sanctionsData, stormData 
       if (data.error) throw new Error(data.error);
       setReport(data.report);
     } catch (err) {
-      setError('Failed to generate report. Check ANTHROPIC_API_KEY.');
+      setError('Failed to generate report. Check OPENAI_API_KEY.');
       console.error(err);
     } finally {
       setLoading(false);
