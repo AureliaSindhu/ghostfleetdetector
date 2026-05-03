@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, AlertTriangle, Ship, MapPin, Clock } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
+import { MarkdownContent } from './MarkdownContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -180,7 +181,11 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                     : 'border-slate-700 bg-slate-900/80 text-slate-200'
                 }`}
               >
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                {msg.role === 'assistant' ? (
+                  <MarkdownContent content={msg.content} variant="chat" />
+                ) : (
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                )}
                 <div className="mt-2 font-sans text-[10px] text-slate-500">
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>

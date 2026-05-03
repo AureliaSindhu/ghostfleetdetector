@@ -42,15 +42,16 @@ export default function Home() {
   const [scoringFactors, setScoringFactors] = useState<ScoringFactors>(DEFAULT_SCORING_FACTORS);
   const [isRadarScanning, setIsRadarScanning] = useState(false);
   const [scanId, setScanId] = useState(0);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   // Settings modal state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   type RightPanel = 'threats' | 'analytics' | 'ingest' | 'ai';
   const [rightPanel, setRightPanel] = useState<RightPanel>('threats');
 
-  // Update current time every second for real-time feel
+  // Update current time every second — initialized in effect to avoid SSR/client hydration mismatch
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -251,7 +252,7 @@ export default function Home() {
             <div>
               <div className="font-sans text-sm font-semibold tracking-[0.16em] text-cyan-100">GHOST FLEET DETECTOR</div>
               <div className="mt-0.5 font-sans text-[10px] tracking-widest text-slate-400">
-                {currentTime.toLocaleTimeString('en-US', { hour12: false })} UTC
+                {currentTime ? currentTime.toLocaleTimeString('en-US', { hour12: false }) : '--:--:--'} UTC
               </div>
             </div>
           </div>

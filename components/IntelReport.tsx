@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FileText, Loader2, Mail, Check } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
+import { MarkdownContent } from './MarkdownContent';
 
 interface IntelReportProps {
   darkPeriod: ScoredDarkPeriod;
@@ -126,8 +127,8 @@ export function IntelReport({ darkPeriod, weatherData, sanctionsData, stormData 
       )}
 
       {report && (
-        <div className="bg-gray-900 rounded p-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
-          {report}
+        <div className="bg-gray-900 rounded p-4 text-sm text-gray-200 leading-relaxed">
+          <MarkdownContent content={report} variant="report" />
         </div>
       )}
     </div>
