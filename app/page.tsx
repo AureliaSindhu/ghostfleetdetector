@@ -225,13 +225,13 @@ export default function Home() {
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-[#071322]">
             <div className="max-w-sm text-center">
-              <div className="text-sm font-mono tracking-[0.2em] text-cyan-200/70">NO AIS DATA LOADED</div>
+              <div className="text-sm font-sans tracking-[0.2em] text-cyan-200/70">NO AIS DATA LOADED</div>
               <div className="mt-3 text-sm text-slate-300">Run the demo scan or load AIS data to start mapping blackout events.</div>
               <div className="mt-5 flex justify-center gap-3">
-                <button onClick={handleDemo} className="px-4 py-2 text-xs font-mono tracking-widest border border-cyan-400/50 bg-cyan-400/10 text-cyan-100">
+                <button onClick={handleDemo} className="px-4 py-2 text-xs font-sans tracking-widest border border-cyan-400/50 bg-cyan-400/10 text-cyan-100">
                   DEMO SCAN
                 </button>
-                <button onClick={() => setRightPanel('ingest')} className="px-4 py-2 text-xs font-mono tracking-widest border border-slate-500/60 text-slate-200">
+                <button onClick={() => setRightPanel('ingest')} className="px-4 py-2 text-xs font-sans tracking-widest border border-slate-500/60 text-slate-200">
                   LOAD DATA
                 </button>
               </div>
@@ -245,8 +245,8 @@ export default function Home() {
           <div className="w-[320px] flex items-center gap-3">
             <div className={`h-2.5 w-2.5 rounded-full ${critical > 0 ? 'bg-red-400' : 'bg-cyan-300'}`} />
             <div>
-              <div className="font-mono text-sm font-semibold tracking-[0.16em] text-cyan-100">GHOST FLEET DETECTOR</div>
-              <div className="mt-0.5 font-mono text-[10px] tracking-widest text-slate-400">
+              <div className="font-sans text-sm font-semibold tracking-[0.16em] text-cyan-100">GHOST FLEET DETECTOR</div>
+              <div className="mt-0.5 font-sans text-[10px] tracking-widest text-slate-400">
                 {currentTime.toLocaleTimeString('en-US', { hour12: false })} UTC
               </div>
             </div>
@@ -260,21 +260,21 @@ export default function Home() {
               { label: 'High', value: high, color: '#fb923c' },
             ].map(({ label, value, color }) => (
               <div key={label} className="min-w-24">
-                <div className="font-mono text-xl font-semibold tabular-nums" style={{ color }}>{value}</div>
+                <div className="font-sans text-xl font-semibold tabular-nums" style={{ color }}>{value}</div>
                 <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
               </div>
             ))}
           </div>
 
           <div className="flex items-center gap-2">
-            {isLiveFeedActive && <span className="rounded border border-green-400/40 px-2 py-1 text-[10px] font-mono text-green-300">LIVE</span>}
+            {isLiveFeedActive && <span className="rounded border border-green-400/40 px-2 py-1 text-[10px] font-sans text-green-300">LIVE</span>}
             {darkPeriods.length > 0 && (
               <>
-                <button onClick={handleDownloadCSV} className="px-3 py-1.5 text-xs font-mono text-cyan-100 border border-cyan-400/30 hover:bg-cyan-400/10">EXPORT</button>
-                <button onClick={handleSaveToSupabase} disabled={isSaving || saveStatus === 'saved'} className="px-3 py-1.5 text-xs font-mono text-slate-200 border border-slate-500/50 disabled:opacity-50">
+                <button onClick={handleDownloadCSV} className="px-3 py-1.5 text-xs font-sans text-cyan-100 border border-cyan-400/30 hover:bg-cyan-400/10">EXPORT</button>
+                <button onClick={handleSaveToSupabase} disabled={isSaving || saveStatus === 'saved'} className="px-3 py-1.5 text-xs font-sans text-slate-200 border border-slate-500/50 disabled:opacity-50">
                   {isSaving ? 'SAVING' : saveStatus === 'saved' ? 'SAVED' : 'SAVE'}
                 </button>
-                <button onClick={handleReset} className="px-3 py-1.5 text-xs font-mono text-red-200 border border-red-400/30 hover:bg-red-400/10">RESET</button>
+                <button onClick={handleReset} className="px-3 py-1.5 text-xs font-sans text-red-200 border border-red-400/30 hover:bg-red-400/10">RESET</button>
               </>
             )}
             <SettingsButton onClick={() => setIsSettingsOpen(true)} />
@@ -285,12 +285,12 @@ export default function Home() {
       <aside className="absolute left-4 top-20 bottom-4 z-20 w-[340px] rounded-md border border-slate-700/90 bg-[#081524]/95 shadow-2xl backdrop-blur flex flex-col overflow-hidden">
         <div className="border-b border-slate-700/80 p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-mono font-semibold tracking-[0.14em] text-cyan-100">DETECTIONS</h2>
+            <h2 className="text-sm font-sans font-semibold tracking-[0.14em] text-cyan-100">DETECTIONS</h2>
             <span className="text-xs text-slate-400">{filteredDarkPeriods.length}/{darkPeriods.length}</span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button onClick={handleDemo} className="px-3 py-2 text-xs font-mono border border-cyan-400/30 bg-cyan-400/10 text-cyan-100">DEMO</button>
-            <button onClick={() => setRightPanel('ingest')} className="px-3 py-2 text-xs font-mono border border-slate-600 text-slate-200">LOAD</button>
+            <button onClick={handleDemo} className="px-3 py-2 text-xs font-sans border border-cyan-400/30 bg-cyan-400/10 text-cyan-100">DEMO</button>
+            <button onClick={() => setRightPanel('ingest')} className="px-3 py-2 text-xs font-sans border border-slate-600 text-slate-200">LOAD</button>
           </div>
         </div>
 
@@ -306,7 +306,7 @@ export default function Home() {
               onClick={() => setChartRiskFilter(chartRiskFilter === label.toString().toUpperCase() ? null : label.toString().toUpperCase())}
               className="rounded border border-slate-700/80 bg-slate-950/35 px-3 py-2 text-left hover:bg-slate-800/60"
             >
-              <div className="font-mono text-lg font-semibold tabular-nums" style={{ color: color as string }}>{value}</div>
+              <div className="font-sans text-lg font-semibold tabular-nums" style={{ color: color as string }}>{value}</div>
               <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
             </button>
           ))}
@@ -324,8 +324,8 @@ export default function Home() {
                   className={`mb-2 w-full rounded border px-3 py-3 text-left transition ${selected ? 'bg-cyan-400/10 border-cyan-300/50' : 'bg-slate-950/35 border-slate-700/70 hover:bg-slate-800/60'}`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-sm text-slate-100">{dp.mmsi}</span>
-                    <span className="text-xs font-mono font-semibold" style={{ color }}>{dp.suspicionScore}</span>
+                    <span className="font-sans text-sm text-slate-100">{dp.mmsi}</span>
+                    <span className="text-xs font-sans font-semibold" style={{ color }}>{dp.suspicionScore}</span>
                   </div>
                   <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
                     <span style={{ color }}>{dp.riskLevel}</span>
@@ -348,7 +348,7 @@ export default function Home() {
               <button
                 key={panel}
                 onClick={() => setRightPanel(panel)}
-                className={`px-2 py-2 text-xs font-mono uppercase tracking-wider ${rightPanel === panel ? 'bg-cyan-400/15 text-cyan-100' : 'text-slate-400 hover:text-slate-100'}`}
+                className={`px-2 py-2 text-xs font-sans uppercase tracking-wider ${rightPanel === panel ? 'bg-cyan-400/15 text-cyan-100' : 'text-slate-400 hover:text-slate-100'}`}
               >
                 {panel === 'threats' ? 'Detail' : panel === 'analytics' ? 'Stats' : 'Data'}
               </button>
@@ -362,23 +362,23 @@ export default function Home() {
               {selectedPeriod ? (
                 <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4">
                   <div className="text-xs uppercase tracking-wider text-slate-400">Selected vessel</div>
-                  <div className="mt-1 font-mono text-2xl text-cyan-100">{selectedPeriod.mmsi}</div>
+                  <div className="mt-1 font-sans text-2xl text-cyan-100">{selectedPeriod.mmsi}</div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <div className="text-slate-500">Risk</div>
-                      <div className="font-mono font-semibold" style={{ color: TC[selectedPeriod.riskLevel] }}>{selectedPeriod.riskLevel}</div>
+                      <div className="font-sans font-semibold" style={{ color: TC[selectedPeriod.riskLevel] }}>{selectedPeriod.riskLevel}</div>
                     </div>
                     <div>
                       <div className="text-slate-500">Score</div>
-                      <div className="font-mono text-slate-100">{selectedPeriod.suspicionScore}/100</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.suspicionScore}/100</div>
                     </div>
                     <div>
                       <div className="text-slate-500">Dark</div>
-                      <div className="font-mono text-slate-100">{selectedPeriod.gapHours.toFixed(1)}h</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.gapHours.toFixed(1)}h</div>
                     </div>
                     <div>
                       <div className="text-slate-500">Distance</div>
-                      <div className="font-mono text-slate-100">{selectedPeriod.distanceNm.toFixed(0)} nm</div>
+                      <div className="font-sans text-slate-100">{selectedPeriod.distanceNm.toFixed(0)} nm</div>
                     </div>
                   </div>
                   <div className="mt-4 space-y-2">
@@ -416,7 +416,7 @@ export default function Home() {
                     type="number"
                     value={minGapHours}
                     onChange={e => setMinGapHours(Number(e.target.value))}
-                    className="w-16 rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+                    className="w-16 rounded border border-slate-600 bg-slate-950 px-2 py-1 font-sans text-sm text-slate-100"
                     min={1}
                     max={72}
                   />
@@ -426,8 +426,8 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={handleDemo} className="rounded border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-xs font-mono text-cyan-100">DEMO SCAN</button>
-                <button onClick={handleLoadAllFromDatabase} disabled={isLoading || dbCount === 0} className="rounded border border-slate-600 px-3 py-3 text-xs font-mono text-slate-200 disabled:opacity-40">
+                <button onClick={handleDemo} className="rounded border border-cyan-400/30 bg-cyan-400/10 px-3 py-3 text-xs font-sans text-cyan-100">DEMO SCAN</button>
+                <button onClick={handleLoadAllFromDatabase} disabled={isLoading || dbCount === 0} className="rounded border border-slate-600 px-3 py-3 text-xs font-sans text-slate-200 disabled:opacity-40">
                   {isLoading ? 'LOADING' : `DATABASE ${dbCount || ''}`}
                 </button>
               </div>

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       to: [to],
       subject: subject || `Intelligence Report: Vessel ${vesselData?.mmsi || 'Unknown'}`,
       html: `
-        <div style="font-family: 'Courier New', monospace; background: #0a1628; color: #67e8f9; padding: 24px; border-radius: 8px;">
+        <div style="font-family: Arial, Helvetica, sans-serif; background: #0a1628; color: #67e8f9; padding: 24px; border-radius: 8px;">
           <div style="border-bottom: 1px solid #164e63; padding-bottom: 16px; margin-bottom: 16px;">
             <h1 style="color: #22d3ee; margin: 0; font-size: 20px;">GHOST FLEET DETECTOR</h1>
             <p style="color: #0891b2; margin: 4px 0 0; font-size: 12px;">MARITIME INTELLIGENCE REPORT</p>

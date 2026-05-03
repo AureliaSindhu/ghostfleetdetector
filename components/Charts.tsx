@@ -28,8 +28,8 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
     const riskLevel = data.payload?.name || label;
     return (
       <div className="bg-[#0d1f35] border border-cyan-500/30 rounded-lg p-3 shadow-lg">
-        <p className="font-mono text-cyan-300 text-sm mb-1">{riskLevel}</p>
-        <p className="font-mono text-white text-lg font-bold">{data.value} vessels</p>
+        <p className="font-sans text-cyan-300 text-sm mb-1">{riskLevel}</p>
+        <p className="font-sans text-white text-lg font-bold">{data.value} vessels</p>
       </div>
     );
   }
@@ -74,19 +74,19 @@ export function RiskDistributionChart({
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-          <h3 className="text-cyan-100 text-sm font-mono tracking-wide">RISK DISTRIBUTION</h3>
+          <h3 className="text-cyan-100 text-sm font-sans tracking-wide">RISK DISTRIBUTION</h3>
         </div>
         {activeRiskFilter && (
           <button
             onClick={() => onRiskFilter?.(null)}
-            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-mono"
+            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-sans"
           >
             CLEAR
           </button>
         )}
       </div>
       {onRiskFilter && (
-        <p className="text-[10px] text-cyan-500/50 mb-2 font-mono">// CLICK SEGMENT TO FILTER</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">// CLICK SEGMENT TO FILTER</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
@@ -115,7 +115,7 @@ export function RiskDistributionChart({
           </Pie>
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ color: '#67e8f9', fontFamily: 'monospace', fontSize: '12px' }}
+            wrapperStyle={{ color: '#67e8f9', fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif', fontSize: '12px' }}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -163,24 +163,24 @@ export function DurationHistogram({
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-          <h3 className="text-cyan-100 text-sm font-mono tracking-wide">DURATION DISTRIBUTION</h3>
+          <h3 className="text-cyan-100 text-sm font-sans tracking-wide">DURATION DISTRIBUTION</h3>
         </div>
         {activeDurationFilter?.min != null && (
           <button
             onClick={() => onDurationFilter?.(null, null)}
-            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-mono"
+            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-sans"
           >
             CLEAR
           </button>
         )}
       </div>
       {onDurationFilter && (
-        <p className="text-[10px] text-cyan-500/50 mb-2 font-mono">// CLICK BAR TO FILTER</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">// CLICK BAR TO FILTER</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
-          <XAxis dataKey="range" stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'monospace', fontSize: 11 }} />
-          <YAxis stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'monospace', fontSize: 11 }} />
+          <XAxis dataKey="range" stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif', fontSize: 11 }} />
+          <YAxis stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif', fontSize: 11 }} />
           <Tooltip content={<CustomTooltip />} />
           <Bar
             dataKey="count"

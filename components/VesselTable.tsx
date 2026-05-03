@@ -96,7 +96,7 @@ export function VesselTable({ darkPeriods, onSelect }: VesselTableProps) {
   };
 
   return (
-    <div className="font-mono text-cyan-50">
+    <div className="font-sans text-cyan-50">
       {/* Filter Toggle */}
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-cyan-500/15 bg-[#05111f] px-4 py-3">
         <button
@@ -225,7 +225,7 @@ export function VesselTable({ darkPeriods, onSelect }: VesselTableProps) {
                   className="border-b border-cyan-500/10 cursor-pointer text-cyan-50/90 hover:bg-cyan-500/10"
                   onClick={() => onSelect?.(dp)}
                 >
-                  <td className="px-4 py-3 font-mono text-cyan-100">{dp.mmsi}</td>
+                  <td className="px-4 py-3 font-sans text-cyan-100">{dp.mmsi}</td>
                   <td className="px-4 py-3 text-cyan-100/85">{dp.suspicionScore}/100</td>
                   <td className="px-4 py-3">
                     <span

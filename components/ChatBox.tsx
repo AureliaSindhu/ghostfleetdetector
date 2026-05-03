@@ -156,7 +156,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
       <div className="flex items-center justify-between p-3 border-b border-cyan-500/20 bg-[#0d1f35]">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff] animate-pulse" />
-          <span className="font-mono text-cyan-300 text-sm tracking-wider">AI ANALYST</span>
+          <span className="font-sans text-cyan-300 text-sm tracking-wider">AI ANALYST</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -183,7 +183,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                 <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-cyan-500/10 flex items-center justify-center">
                   <MessageSquare className="w-6 h-6 text-cyan-400" />
                 </div>
-                <p className="text-cyan-300/70 text-sm font-mono mb-4">
+                <p className="text-cyan-300/70 text-sm font-sans mb-4">
                   ASK ME ABOUT THE DATA
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -191,7 +191,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                     <button
                       key={i}
                       onClick={() => sendMessage(preset.query)}
-                      className="flex items-center gap-1.5 bg-[#1e3a5f] border border-cyan-500/30 hover:border-cyan-400/50 px-3 py-1.5 rounded text-xs font-mono text-cyan-300 transition-all"
+                      className="flex items-center gap-1.5 bg-[#1e3a5f] border border-cyan-500/30 hover:border-cyan-400/50 px-3 py-1.5 rounded text-xs font-sans text-cyan-300 transition-all"
                     >
                       {preset.icon}
                       {preset.label}
@@ -214,7 +214,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                   }`}
                 >
                   <div className="whitespace-pre-wrap">{msg.content}</div>
-                  <div className="text-[10px] text-cyan-500/50 mt-1 font-mono">
+                  <div className="text-[10px] text-cyan-500/50 mt-1 font-sans">
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -225,7 +225,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
               <div className="flex justify-start">
                 <div className="bg-[#132743] border border-cyan-500/20 rounded-lg p-3 flex items-center gap-2">
                   <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                  <span className="text-cyan-300/70 text-sm font-mono">ANALYZING...</span>
+                  <span className="text-cyan-300/70 text-sm font-sans">ANALYZING...</span>
                 </div>
               </div>
             )}
@@ -247,7 +247,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                   key={i}
                   onClick={() => sendMessage(preset.query)}
                   disabled={isLoading}
-                  className="flex items-center gap-1 bg-[#1e3a5f]/50 border border-cyan-500/20 hover:border-cyan-400/40 px-2 py-1 rounded text-[10px] font-mono text-cyan-400/70 transition-all disabled:opacity-50"
+                  className="flex items-center gap-1 bg-[#1e3a5f]/50 border border-cyan-500/20 hover:border-cyan-400/40 px-2 py-1 rounded text-[10px] font-sans text-cyan-400/70 transition-all disabled:opacity-50"
                 >
                   {preset.icon}
                   {preset.label}
@@ -265,7 +265,7 @@ ${topThreats.map((t) => `- MMSI ${t.mmsi}: Score ${t.score}, Dark for ${t.gapHou
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about the data..."
                 disabled={isLoading}
-                className="flex-1 bg-[#132743] border border-cyan-500/30 rounded px-3 py-2 text-sm text-cyan-100 placeholder-cyan-500/40 font-mono focus:border-cyan-400 focus:outline-none disabled:opacity-50"
+                className="flex-1 bg-[#132743] border border-cyan-500/30 rounded px-3 py-2 text-sm text-cyan-100 placeholder-cyan-500/40 font-sans focus:border-cyan-400 focus:outline-none disabled:opacity-50"
               />
               <button
                 type="submit"

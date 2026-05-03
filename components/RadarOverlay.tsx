@@ -103,7 +103,7 @@ export function RadarOverlay({ isScanning, onScanComplete }: RadarOverlayProps) 
       {/* Status text */}
       <div className="absolute bottom-20 left-0 right-0 text-center">
         <div className="inline-block bg-[#0d1f35]/80 border border-cyan-500/30 rounded px-6 py-3">
-          <div className="text-cyan-400 font-mono text-sm mb-2">
+          <div className="text-cyan-400 font-sans text-sm mb-2">
             SCANNING MARITIME TRAFFIC
           </div>
           <div className="w-48 h-2 bg-[#132743] rounded overflow-hidden mx-auto">
@@ -112,7 +112,7 @@ export function RadarOverlay({ isScanning, onScanComplete }: RadarOverlayProps) 
               style={{ width: `${scanProgress}%` }}
             />
           </div>
-          <div className="text-cyan-300/70 font-mono text-xs mt-2">
+          <div className="text-cyan-300/70 font-sans text-xs mt-2">
             {scanProgress.toFixed(0)}% COMPLETE
           </div>
         </div>

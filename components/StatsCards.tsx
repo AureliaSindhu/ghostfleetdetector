@@ -153,13 +153,13 @@ function StatCard({
 
       <div className="flex items-center gap-1.5 mb-1">
         <div className={`${classes.text}`}>{icon}</div>
-        <span className={`text-[11px] font-mono ${classes.text} opacity-90 tracking-wider`}>{label}</span>
+        <span className={`text-[11px] font-sans ${classes.text} opacity-90 tracking-wider`}>{label}</span>
       </div>
-      <div className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>
+      <div className={`text-2xl font-bold font-sans tabular-nums ${classes.text}`}>
         {value}
       </div>
       {subtitle && (
-        <div className="text-[11px] text-cyan-200/60 font-mono mt-1">{subtitle}</div>
+        <div className="text-[11px] text-cyan-200/60 font-sans mt-1">{subtitle}</div>
       )}
 
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)` }} />
@@ -210,14 +210,14 @@ function RiskStatCard({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5">
           <div className={`${classes.text} ${pulse ? 'animate-pulse' : ''}`}>{icon}</div>
-          <span className={`text-[11px] font-mono ${classes.text} opacity-90 tracking-wider`}>{label}</span>
+          <span className={`text-[11px] font-sans ${classes.text} opacity-90 tracking-wider`}>{label}</span>
         </div>
-        <span className="text-[10px] font-mono text-cyan-200/50">[{scoreRange}]</span>
+        <span className="text-[10px] font-sans text-cyan-200/50">[{scoreRange}]</span>
       </div>
 
       <div className="flex items-baseline gap-2">
-        <span className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>{count}</span>
-        <span className="text-sm font-mono text-cyan-100/65">{percentage}%</span>
+        <span className={`text-2xl font-bold font-sans tabular-nums ${classes.text}`}>{count}</span>
+        <span className="text-sm font-sans text-cyan-100/65">{percentage}%</span>
       </div>
 
       {/* Progress bar */}
@@ -230,7 +230,7 @@ function RiskStatCard({
 
       {/* Additional stats */}
       {count > 0 && (
-        <div className="mt-1.5 flex justify-between text-[10px] font-mono text-cyan-100/60">
+        <div className="mt-1.5 flex justify-between text-[10px] font-sans text-cyan-100/60">
           <span>AVG: {avgScore} pts</span>
           <span>{avgGap}h gap</span>
         </div>

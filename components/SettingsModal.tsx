@@ -30,8 +30,8 @@ export function SettingsModal({ isOpen, onClose, scoringFactors, onScoringChange
               <Settings className="w-4 h-4 text-cyan-400" />
             </div>
             <div>
-              <h2 className="text-lg font-mono font-semibold text-cyan-100 tracking-wide">SETTINGS</h2>
-              <p className="text-[10px] font-mono text-cyan-500/50">CONFIGURE DETECTION PARAMETERS</p>
+              <h2 className="text-lg font-sans font-semibold text-cyan-100 tracking-wide">SETTINGS</h2>
+              <p className="text-[10px] font-sans text-cyan-500/50">CONFIGURE DETECTION PARAMETERS</p>
             </div>
           </div>
           <button
@@ -48,7 +48,7 @@ export function SettingsModal({ isOpen, onClose, scoringFactors, onScoringChange
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Sliders className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-mono text-cyan-300 tracking-wider">SCORING CONFIGURATION</span>
+              <span className="text-sm font-sans text-cyan-300 tracking-wider">SCORING CONFIGURATION</span>
             </div>
             <ScoringConfig factors={scoringFactors} onChange={onScoringChange} />
           </div>
@@ -58,7 +58,7 @@ export function SettingsModal({ isOpen, onClose, scoringFactors, onScoringChange
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Bell className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-mono text-cyan-300 tracking-wider">NOTIFICATIONS</span>
+              <span className="text-sm font-sans text-cyan-300 tracking-wider">NOTIFICATIONS</span>
             </div>
           </div>
           */}
@@ -68,7 +68,7 @@ export function SettingsModal({ isOpen, onClose, scoringFactors, onScoringChange
         <div className="flex items-center justify-end gap-3 p-4 border-t border-cyan-500/20 bg-[#0a1628]">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 rounded font-mono text-sm text-cyan-300 transition-all"
+            className="px-4 py-2 bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 rounded font-sans text-sm text-cyan-300 transition-all"
           >
             CLOSE
           </button>
