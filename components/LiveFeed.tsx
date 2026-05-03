@@ -99,38 +99,30 @@ export function LiveFeed({ onNewAlert, isActive, onToggle }: LiveFeedProps) {
 
   return (
     <div className="bg-[#0d1f35] rounded-lg p-4 border border-cyan-500/20" style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`relative ${isActive ? 'animate-pulse' : ''}`}>
-            <Radio className={`w-5 h-5 ${isActive ? 'text-red-400' : 'text-cyan-500/50'}`} />
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`relative flex-shrink-0 ${isActive ? 'animate-pulse' : ''}`}>
+            <Radio className={`w-4 h-4 ${isActive ? 'text-red-400' : 'text-cyan-500/50'}`} />
             {isActive && (
-              <div className="absolute inset-0 w-5 h-5 bg-red-500/20 rounded-full animate-ping" />
+              <div className="absolute inset-0 w-4 h-4 bg-red-500/20 rounded-full animate-ping" />
             )}
           </div>
-          <h3 className="text-sm font-mono font-semibold text-cyan-300 tracking-wider">LIVE FEED</h3>
+          <h3 className="text-xs font-mono font-semibold text-cyan-300 tracking-wider whitespace-nowrap">LIVE</h3>
           {isActive && (
-            <span className="text-[10px] bg-red-500/20 border border-red-500/50 text-red-400 px-2 py-0.5 rounded font-mono animate-pulse">
-              ACTIVE
+            <span className="text-[9px] bg-red-500/20 border border-red-500/50 text-red-400 px-1.5 py-0.5 rounded font-mono">
+              ON
             </span>
           )}
         </div>
         <button
           onClick={onToggle}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs font-mono transition-all ${
+          className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-mono transition-all ${
             isActive
               ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
               : 'bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30'
           }`}
         >
-          {isActive ? (
-            <>
-              <Pause className="w-3 h-3" /> PAUSE
-            </>
-          ) : (
-            <>
-              <Play className="w-3 h-3" /> START
-            </>
-          )}
+          {isActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
         </button>
       </div>
 

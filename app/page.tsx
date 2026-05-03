@@ -20,6 +20,8 @@ import { MagicScanner } from '@/components/MagicScanner';
 import { DataGenerator } from '@/components/DataGenerator';
 import { RadarOverlay } from '@/components/RadarOverlay';
 import { ChatBox } from '@/components/ChatBox';
+import { SuspiciousShipsCard } from '@/components/SuspiciousShipsCard';
+import { SettingsModal, SettingsButton } from '@/components/SettingsModal';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +54,9 @@ export default function Home() {
   // Radar scan animation state
   const [isRadarScanning, setIsRadarScanning] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Settings modal state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Update current time every second for real-time feel
   useEffect(() => {
@@ -307,17 +312,20 @@ export default function Home() {
                 DETECTING DARK VESSELS // TRACKING AIS GAPS // MONITORING SUSPICIOUS ACTIVITY
               </p>
             </div>
-            <div className="text-right font-mono">
-              <div className="text-cyan-400 text-2xl tabular-nums">
-                {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+            <div className="flex items-start gap-4">
+              <div className="text-right font-mono">
+                <div className="text-cyan-400 text-2xl tabular-nums">
+                  {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                </div>
+                <div className="text-cyan-300/50 text-xs">
+                  {currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}
+                </div>
+                <div className="mt-2 flex items-center gap-2 justify-end">
+                  <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_#22c55e]" />
+                  <span className="text-green-400/80 text-xs">SYSTEM ONLINE</span>
+                </div>
               </div>
-              <div className="text-cyan-300/50 text-xs">
-                {currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}
-              </div>
-              <div className="mt-2 flex items-center gap-2 justify-end">
-                <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_#22c55e]" />
-                <span className="text-green-400/80 text-xs">SYSTEM ONLINE</span>
-              </div>
+              <SettingsButton onClick={() => setIsSettingsOpen(true)} />
             </div>
           </div>
           {/* Decorative line */}
@@ -464,7 +472,7 @@ export default function Home() {
               />
             )}
 
-            {/* Main content: Map on left, Charts/Table on right */}
+            {/* Main content: Map + Suspicious Ships on top, Charts side by side, Table below */}
             <div className="grid lg:grid-cols-5 gap-4">
               {/* Left side: Tactical Map */}
               <div className="lg:col-span-3">
@@ -474,7 +482,7 @@ export default function Home() {
                     <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
                   </div>
-                  <div className="h-[calc(100vh-320px)] min-h-[400px]">
+                  <div className="h-[400px]">
                     <DarkPeriodsMap
                       darkPeriods={darkPeriods}
                       onSelectPeriod={setSelectedPeriod}
@@ -484,19 +492,27 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right side: Charts and Threat Analysis */}
+              {/* Right side: Suspicious Ships + Charts */}
               <div className="lg:col-span-2 space-y-4">
-                {/* Charts stacked vertically */}
-                <RiskDistributionChart
+                {/* Suspicious Ships Card */}
+                <SuspiciousShipsCard
                   darkPeriods={darkPeriods}
-                  onRiskFilter={setChartRiskFilter}
-                  activeRiskFilter={chartRiskFilter}
+                  onSelectVessel={setSelectedPeriod}
                 />
-                <DurationHistogram
-                  darkPeriods={darkPeriods}
-                  onDurationFilter={handleDurationFilter}
-                  activeDurationFilter={chartDurationFilter}
-                />
+
+                {/* Charts in a 2-column grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <RiskDistributionChart
+                    darkPeriods={darkPeriods}
+                    onRiskFilter={setChartRiskFilter}
+                    activeRiskFilter={chartRiskFilter}
+                  />
+                  <DurationHistogram
+                    darkPeriods={darkPeriods}
+                    onDurationFilter={handleDurationFilter}
+                    activeDurationFilter={chartDurationFilter}
+                  />
+                </div>
 
                 {/* Filter indicator */}
                 {(chartRiskFilter || chartDurationFilter.min != null) && (
@@ -516,23 +532,28 @@ export default function Home() {
                     </button>
                   </div>
                 )}
-
-                {/* Threat Analysis Table */}
-                <div className="data-panel rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
-                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
-                  </div>
-                  <div className="max-h-[300px] overflow-y-auto">
-                    <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Scoring Config - collapsible or in a drawer could be nice */}
-            <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
+            {/* Threat Analysis Table - Full width below */}
+            <div className="data-panel rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
+                <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
+              </div>
+              <div className="max-h-[250px] overflow-y-auto">
+                <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
+              </div>
+            </div>
+
+            {/* Settings Modal */}
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+              scoringFactors={scoringFactors}
+              onScoringChange={setScoringFactors}
+            />
 
             <div className="flex gap-3 flex-wrap data-panel rounded-lg p-4">
               <div className="text-cyan-400/60 font-mono text-xs mr-2 self-center">EXPORT:</div>
