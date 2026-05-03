@@ -333,13 +333,13 @@ export default function Home() {
               { label: 'HIGH', value: high, sub: 'score 50–69 · monitor', color: '#f97316', glow: false },
               { label: 'MEDIUM', value: medium, sub: 'score 30–49 · flagged', color: '#ffb800', glow: false },
             ] as Array<{ label: string; value: number; sub: string; color: string; glow: boolean }>).map(({ label, value, sub, color, glow }) => (
-              <div key={label} className="flex-1 px-4 py-2.5">
+              <div key={label} className="flex-1 px-5 py-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-mono text-2xl font-bold tabular-nums" style={{ color, textShadow: glow && value > 0 ? `0 0 20px ${color}, 0 0 40px ${color}60` : 'none' }}>{value}</span>
+                  <span className="font-mono text-3xl font-bold tabular-nums" style={{ color, textShadow: glow && value > 0 ? `0 0 20px ${color}, 0 0 40px ${color}60` : 'none' }}>{value}</span>
                   {glow && value > 0 && <span className="text-[9px] font-mono animate-pulse" style={{ color }}>● ACTIVE</span>}
                 </div>
-                <div className="text-[9px] font-mono tracking-widest" style={{ color: `${color}80` }}>{label}</div>
-                <div className="text-[8px] font-mono hidden lg:block" style={{ color: 'rgba(0,212,255,0.2)' }}>{sub}</div>
+                <div className="text-[10px] font-mono tracking-widest mt-1" style={{ color: `${color}80` }}>{label}</div>
+                <div className="text-[10px] font-mono hidden lg:block mt-0.5" style={{ color: 'rgba(0,212,255,0.2)' }}>{sub}</div>
               </div>
             ))}
           </div>
@@ -365,7 +365,7 @@ export default function Home() {
 
         {/* Mission context bar */}
         {darkPeriods.length > 0 ? (
-          <div className="flex items-center gap-4 px-5 py-1 text-[9px] font-mono" style={{ background: 'rgba(0,212,255,0.02)', borderBottom: '1px solid rgba(0,212,255,0.06)' }}>
+          <div className="flex items-center gap-4 px-5 py-2 text-[10px] font-mono" style={{ background: "rgba(0,212,255,0.02)", borderBottom: '1px solid rgba(0,212,255,0.06)' }}>
             <span style={{ color: 'rgba(0,212,255,0.35)', letterSpacing: '0.15em' }}>MISSION</span>
             <span style={{ color: 'rgba(0,212,255,0.45)' }}>Detecting vessels that disable AIS transponders to conceal movement — sanctions evasion, unreported ship-to-ship transfers, ghost fleet activity</span>
             <span className="ml-auto" style={{ color: 'rgba(0,212,255,0.25)' }}>
@@ -381,7 +381,7 @@ export default function Home() {
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-3 px-5 py-1 text-[9px] font-mono" style={{ background: 'rgba(0,212,255,0.02)' }}>
+          <div className="flex items-center gap-3 px-5 py-2 text-[10px] font-mono" style={{ background: 'rgba(0,212,255,0.02)' }}>
             <span style={{ color: 'rgba(255,179,0,0.5)' }}>◈ STANDBY</span>
             <span style={{ color: 'rgba(0,212,255,0.3)' }}>No AIS data loaded · Run demo scan or upload vessel tracking CSV to begin blackout detection</span>
           </div>
@@ -452,9 +452,9 @@ export default function Home() {
           {/* BLACKOUT INTEL MATRIX — vessel table, always below map */}
           {darkPeriods.length > 0 && (
             <div className="flex-none border-t border-cyan-500/15" style={{ height: '185px', background: 'rgba(4,11,20,0.98)' }}>
-              <div className="flex items-center gap-3 px-4 py-1.5 border-b border-cyan-500/10">
+              <div className="flex items-center gap-3 px-4 py-2.5 border-b border-cyan-500/10">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(0,212,255,0.5)' }} />
-                <span className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.45)' }}>BLACKOUT INTEL MATRIX</span>
+                <span className="text-xs font-mono tracking-widest font-bold" style={{ color: "rgba(0,212,255,0.55)" }}>BLACKOUT INTEL MATRIX</span>
                 <span className="text-[9px] font-mono" style={{ color: 'rgba(0,212,255,0.2)' }}>RANKED BY THREAT SCORE</span>
                 {(chartRiskFilter || chartDurationFilter.min != null) && (
                   <button onClick={() => { setChartRiskFilter(null); setChartDurationFilter({ min: null, max: null }); }}
@@ -472,18 +472,18 @@ export default function Home() {
         </div>
 
         {/* ── RIGHT PANEL: SOC Threat Feed ── */}
-        <aside className="flex-none w-96 flex flex-col border-l border-cyan-500/20 min-h-0" style={{ background: 'rgba(4,11,20,0.98)' }}>
+        <aside className="flex-none w-[440px] flex flex-col border-l border-cyan-500/20 min-h-0" style={{ background: 'rgba(4,11,20,0.98)' }}>
 
           {/* Panel header with tab switcher */}
-          <div className="flex-none border-b border-cyan-500/15 px-4 py-2.5 flex items-center gap-3">
+          <div className="flex-none border-b border-cyan-500/15 px-5 py-4 flex items-center gap-3">
             <div className="w-2 h-2 rounded-full flex-none" style={{ background: 'rgba(0,212,255,0.6)', boxShadow: '0 0 6px rgba(0,212,255,0.4)' }} />
-            <span className="text-[10px] font-mono tracking-[0.18em] font-bold flex-1" style={{ color: '#00d4ff' }}>
+            <span className="text-xs font-mono tracking-[0.18em] font-bold flex-1" style={{ color: '#00d4ff' }}>
               {rightPanel === 'threats' ? 'AIS BLACKOUT MONITOR' : rightPanel === 'analytics' ? 'THREAT ANALYTICS' : 'DATA INGEST'}
             </span>
             <div className="flex items-center gap-1">
               {(['threats', 'analytics', 'ingest'] as RightPanel[]).map(p => (
                 <button key={p} onClick={() => setRightPanel(p)}
-                  className="text-[8px] font-mono tracking-widest px-2 py-1 transition-all"
+                  className="text-[10px] font-mono tracking-widest px-3 py-1.5 transition-all"
                   style={{
                     color: rightPanel === p ? '#00d4ff' : 'rgba(0,212,255,0.3)',
                     background: rightPanel === p ? 'rgba(0,212,255,0.1)' : 'transparent',
@@ -516,14 +516,14 @@ export default function Home() {
                 ) : (
                   <div>
                     {/* Threat level filter bar */}
-                    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-cyan-500/10">
-                      <span className="text-[8px] font-mono mr-1" style={{ color: 'rgba(0,212,255,0.25)' }}>FILTER</span>
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-cyan-500/10">
+                      <span className="text-[10px] font-mono mr-1" style={{ color: 'rgba(0,212,255,0.25)' }}>FILTER</span>
                       {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map(level => {
                         const count = darkPeriods.filter(d => d.riskLevel === level).length;
                         const active = chartRiskFilter === level;
                         return (
                           <button key={level} onClick={() => setChartRiskFilter(active ? null : level)}
-                            className="flex items-center gap-1 px-2 py-0.5 transition-all font-mono"
+                            className="flex items-center gap-1.5 px-3 py-1.5 transition-all font-mono"
                             style={{
                               border: `1px solid ${active ? TC[level] : TC[level] + '30'}`,
                               background: active ? `${TC[level]}18` : 'transparent',
@@ -533,7 +533,7 @@ export default function Home() {
                           </button>
                         );
                       })}
-                      <span className="ml-auto text-[8px] font-mono" style={{ color: 'rgba(0,212,255,0.2)' }}>CLICK TO FILTER</span>
+                      <span className="ml-auto text-[10px] font-mono" style={{ color: 'rgba(0,212,255,0.2)' }}>CLICK TO FILTER</span>
                     </div>
 
                     {/* Ghost vessel alert cards */}
@@ -547,42 +547,42 @@ export default function Home() {
                           onClick={() => setSelectedPeriod(sel ? null : dp)}
                           onMouseOver={e => { if (!sel) (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'; }}
                           onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = sel ? `${color}0e` : 'transparent'; }}>
-                          <div className="px-3 py-2.5">
+                          <div className="px-4 py-4">
                             {/* Header: vessel ID + threat badge */}
-                            <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-start justify-between gap-3 mb-3">
                               <div>
-                                <div className="text-[8px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.3)' }}>GHOST VESSEL</div>
-                                <div className="text-sm font-mono font-bold tabular-nums" style={{ color: 'rgba(0,212,255,0.9)' }}>{dp.mmsi}</div>
+                                <div className="text-xs font-mono tracking-widest" style={{ color: "rgba(0,212,255,0.35)" }}>GHOST VESSEL</div>
+                                <div className="text-xl font-mono font-bold tabular-nums" style={{ color: 'rgba(0,212,255,0.9)' }}>{dp.mmsi}</div>
                               </div>
                               <div className="text-right flex-none">
-                                <div className="text-[10px] font-mono font-bold px-1.5 py-0.5" style={{ color, border: `1px solid ${color}45`, background: `${color}10` }}>{dp.riskLevel}</div>
-                                <div className="text-xs font-mono font-bold mt-0.5 tabular-nums" style={{ color }}>{dp.suspicionScore}/100</div>
+                                <div className="text-xs font-mono font-bold px-2 py-1" style={{ color, border: `1px solid ${color}45`, background: `${color}10` }}>{dp.riskLevel}</div>
+                                <div className="text-sm font-mono font-bold mt-1 tabular-nums" style={{ color }}>{dp.suspicionScore}/100</div>
                               </div>
                             </div>
 
                             {/* Threat score bar */}
-                            <div className="w-full h-0.5 mb-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,212,255,0.1)' }}>
+                            <div className="w-full h-1.5 mb-3 rounded-full overflow-hidden" style={{ background: 'rgba(0,212,255,0.1)' }}>
                               <div className="h-full rounded-full" style={{ width: `${dp.suspicionScore}%`, background: color, boxShadow: `0 0 4px ${color}` }} />
                             </div>
 
                             {/* Key metrics */}
-                            <div className="grid grid-cols-3 gap-1 mb-2">
+                            <div className="grid grid-cols-3 gap-2 mb-3">
                               {[
                                 { label: 'AIS DARK', value: `${dp.gapHours.toFixed(0)}H`, alert: dp.gapHours > 48 },
                                 { label: 'DARK DIST', value: `${dp.distanceNm.toFixed(0)}NM`, alert: dp.distanceNm > 200 },
                                 { label: 'IMPLIED SPD', value: `${dp.impliedSpeedKnots.toFixed(1)}KT`, alert: dp.impliedSpeedKnots > 25 },
                               ].map(({ label, value, alert }) => (
-                                <div key={label} className="px-1.5 py-1 text-center" style={{ background: 'rgba(0,212,255,0.03)', border: '1px solid rgba(0,212,255,0.07)' }}>
-                                  <div className="text-[7px] font-mono tracking-wider" style={{ color: 'rgba(0,212,255,0.3)' }}>{label}</div>
-                                  <div className="text-[11px] font-mono font-bold" style={{ color: alert ? color : 'rgba(0,212,255,0.75)' }}>{value}</div>
+                                <div key={label} className="px-2 py-2.5 text-center" style={{ background: "rgba(0,212,255,0.04)", border: "1px solid rgba(0,212,255,0.1)" }}>
+                                  <div className="text-[10px] font-mono tracking-wider mb-1" style={{ color: 'rgba(0,212,255,0.3)' }}>{label}</div>
+                                  <div className="text-base font-mono font-bold" style={{ color: alert ? color : 'rgba(0,212,255,0.75)' }}>{value}</div>
                                 </div>
                               ))}
                             </div>
 
                             {/* Why flagged */}
-                            <div className="space-y-0.5">
+                            <div className="space-y-1.5">
                               {dp.reasons.slice(0, 3).map((r, ri) => (
-                                <div key={ri} className="text-[9px] font-mono flex items-start gap-1">
+                                <div key={ri} className="text-[10px] font-mono flex items-start gap-1.5">
                                   <span className="flex-none" style={{ color: `${color}70` }}>▸</span>
                                   <span className="truncate" style={{ color: 'rgba(0,212,255,0.45)' }}>{r}</span>
                                 </div>
@@ -591,7 +591,7 @@ export default function Home() {
 
                             {sel && (
                               <button onClick={e => { e.stopPropagation(); }}
-                                className="mt-2 w-full text-[9px] font-mono py-1.5 tracking-widest transition-all"
+                                className="mt-3 w-full text-xs font-mono py-2.5 tracking-widest transition-all"
                                 style={{ border: `1px solid ${color}40`, color, background: `${color}0e` }}>
                                 OPEN FULL INTEL REPORT ▶
                               </button>
@@ -718,7 +718,7 @@ export default function Home() {
       {selectedPeriod && <VesselDetailModal period={selectedPeriod} onClose={() => setSelectedPeriod(null)} />}
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} scoringFactors={scoringFactors} onScoringChange={setScoringFactors} />
 
-      <footer className="flex-none flex items-center justify-between px-5 py-1 border-t relative z-10" style={{ background: '#040b14', borderColor: 'rgba(0,212,255,0.1)' }}>
+      <footer className="flex-none flex items-center justify-between px-5 py-2 border-t relative z-10" style={{ background: '#040b14', borderColor: 'rgba(0,212,255,0.1)' }}>
         <div className="flex items-center gap-4">
           {([['AIS PARSER', true], ['THREAT SCORER', true], ['OPEN-METEO', true], ['OPENSANCTIONS', true], ['SUPABASE', !!supabase]] as [string, boolean][]).map(([label, active]) => (
             <div key={label} className="flex items-center gap-1.5">
