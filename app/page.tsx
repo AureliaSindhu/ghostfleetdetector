@@ -26,12 +26,18 @@ export default function Home() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [uploadHistory, setUploadHistory] = useState<Array<{ id: string; filename: string | null; dark_periods_found: number; created_at: string }>>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [dbCount, setDbCount] = useState<number>(0);
 
   const supabase = useSupabase();
 
-  // Load history on mount
+  // Load history and count on mount
   useEffect(() => {
-    fetchUploadHistory(supabase).then(setUploadHistory);
+    fetchUploadHistory(supabase).then((history) => {
+      setUploadHistory(history);
+      // Sum up all dark periods
+      const total = history.reduce((sum, batch) => sum + (batch.dark_periods_found || 0), 0);
+      setDbCount(total);
+    });
   }, [supabase]);
 
   const handleFileLoad = useCallback(
@@ -110,11 +116,22 @@ export default function Home() {
   const handleLoadFromHistory = async (batchId: string) => {
     setIsLoading(true);
     const periods = await fetchAllDarkPeriods(supabase, { limit: 100 });
-    // Filter by batch if needed - for now just load all
     if (periods.length > 0) {
       setDarkPeriods(periods);
+      setRecords([]);
       setIsDemo(false);
       setShowHistory(false);
+    }
+    setIsLoading(false);
+  };
+
+  const handleLoadAllFromDatabase = async () => {
+    setIsLoading(true);
+    const periods = await fetchAllDarkPeriods(supabase, { limit: 500 });
+    if (periods.length > 0) {
+      setDarkPeriods(periods);
+      setRecords([]);
+      setIsDemo(false);
     }
     setIsLoading(false);
   };
@@ -180,12 +197,19 @@ export default function Home() {
             )}
 
             <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
-            <div className="mt-4 text-center">
+            <div className="mt-4 flex justify-center gap-4 flex-wrap">
               <button
                 onClick={handleDemo}
                 className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition-colors"
               >
                 🎮 Run Demo with Sample Data
+              </button>
+              <button
+                onClick={handleLoadAllFromDatabase}
+                disabled={isLoading || dbCount === 0}
+                className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded transition-colors disabled:opacity-50"
+              >
+                {isLoading ? '⏳ Loading...' : `🗄️ Load from Database${dbCount > 0 ? ` (${dbCount})` : ''}`}
               </button>
             </div>
           </div>
