@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "Bash(gh pr *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npm run *)",
+      "Bash(git rm *)",
+      "Bash(npm install *)",
+      "WebFetch(domain:www.palantir.com)",
+      "WebSearch",
+      "WebFetch(domain:blog.palantir.com)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(kill %1)",
+      "WebFetch(domain:cerebralvalley.ai)",
+      "Bash(git merge *)",
+      "Bash(git stash *)",
+      "Bash(git ls-tree *)",
+      "Bash(git fetch *)",
+      "Bash(head -290 app/page.tsx)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

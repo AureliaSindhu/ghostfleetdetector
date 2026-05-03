@@ -288,340 +288,447 @@ export default function Home() {
     setIsLoading(false);
   };
 
+
+  /* ── Render ─────────────────────────────────────────────────── */
+  const TC: Record<string, string> = { CRITICAL: '#ff3366', HIGH: '#f97316', MEDIUM: '#ffb800', LOW: '#00ff88' };
+  const critical = darkPeriods.filter(d => d.riskLevel === 'CRITICAL').length;
+  const high = darkPeriods.filter(d => d.riskLevel === 'HIGH').length;
+  const medium = darkPeriods.filter(d => d.riskLevel === 'MEDIUM').length;
+  type RightPanel = 'threats' | 'analytics' | 'ingest';
+  const [rightPanel, setRightPanel] = useState<RightPanel>('threats');
+
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white p-6 tactical-grid relative">
-      {/* Radar scanning overlay */}
+    <div className="h-screen flex flex-col overflow-hidden bg-[#060e1a] text-white relative" style={{
+      backgroundImage: 'linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px)',
+      backgroundSize: '40px 40px',
+    }}>
       <RadarOverlay isScanning={isRadarScanning} onScanComplete={handleRadarScanComplete} />
+      <div className="fixed inset-0 pointer-events-none z-[5]" style={{
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.012) 2px, rgba(0,212,255,0.012) 4px)',
+      }} />
 
-      {/* Scan lines effect */}
-      <div className="fixed inset-0 pointer-events-none z-[5] scan-lines" />
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Naval Header */}
-        <header className="mb-8 relative">
-          <div className="flex items-start justify-between flex-wrap gap-4">
+      {/* ══ MISSION PULSE HEADER ══════════════════════════════════ */}
+      <header className="flex-none relative z-10 border-b-2 border-cyan-500/25" style={{ background: '#040b14' }}>
+        {/* Brand + live threat counters */}
+        <div className="flex items-stretch border-b border-cyan-500/10">
+          {/* Brand */}
+          <div className="flex items-center gap-3 px-5 py-3 border-r border-cyan-500/15 flex-none">
+            <div className={`w-3 h-3 rounded-full flex-none ${critical > 0 ? 'bg-red-500' : 'bg-cyan-400'}`}
+              style={{ boxShadow: critical > 0 ? '0 0 14px #ff3366, 0 0 4px #ff3366' : '0 0 8px #00d4ff' }}
+            />
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_#00d4ff] animate-pulse" />
-                <span className="text-cyan-400/70 font-mono text-xs tracking-widest">MARITIME SURVEILLANCE SYSTEM</span>
+              <div className="font-mono text-sm tracking-[0.18em] font-bold leading-tight" style={{ color: '#00d4ff' }}>GHOST FLEET DETECTOR</div>
+              <div className="font-mono text-[9px] tracking-widest mt-0.5" style={{ color: 'rgba(0,212,255,0.4)' }}>
+                MARITIME AIS SURVEILLANCE · {currentTime.toLocaleTimeString('en-US', { hour12: false })} UTC
               </div>
-              <h1 className="text-4xl font-bold mb-2 text-white tracking-tight">
-                GHOST FLEET DETECTOR
-              </h1>
-              <p className="text-cyan-300/60 font-mono text-sm">
-                DETECTING DARK VESSELS // TRACKING AIS GAPS // MONITORING SUSPICIOUS ACTIVITY
-              </p>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="text-right font-mono">
-                <div className="text-cyan-400 text-2xl tabular-nums">
-                  {currentTime.toLocaleTimeString('en-US', { hour12: false })}
-                </div>
-                <div className="text-cyan-300/50 text-xs">
-                  {currentTime.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}
-                </div>
-                <div className="mt-2 flex items-center gap-2 justify-end">
-                  <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_6px_#22c55e]" />
-                  <span className="text-green-400/80 text-xs">SYSTEM ONLINE</span>
-                </div>
-              </div>
-              <SettingsButton onClick={() => setIsSettingsOpen(true)} />
             </div>
           </div>
-          {/* Decorative line */}
-          <div className="mt-4 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-        </header>
 
-        {darkPeriods.length === 0 ? (
-          <div>
-            <div className="mb-4 flex items-center gap-4 flex-wrap">
-              <label className="text-sm text-cyan-300/80 font-mono flex items-center gap-2">
-                <span className="text-cyan-400/60">MIN_DARK_PERIOD:</span>
-                <input
-                  type="number"
-                  value={minGapHours}
-                  onChange={(e) => setMinGapHours(Number(e.target.value))}
-                  className="w-20 bg-[#132743] border border-cyan-500/30 rounded px-2 py-1 text-cyan-300 font-mono text-center focus:border-cyan-400 focus:outline-none"
-                  min={1}
-                  max={72}
-                />
-                <span className="text-cyan-400/60">HRS</span>
-              </label>
-              {uploadHistory.length > 0 && (
-                <button
-                  onClick={() => setShowHistory(!showHistory)}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-1"
-                >
-                  <span className="w-2 h-2 bg-cyan-400/50 rounded-full" />
-                  {showHistory ? 'HIDE' : 'SHOW'} HISTORY [{uploadHistory.length}]
-                </button>
-              )}
-            </div>
-
-            {showHistory && uploadHistory.length > 0 && (
-              <div className="mb-6 data-panel rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3 text-cyan-300 font-mono">// PREVIOUS ANALYSES</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {uploadHistory.map((batch) => (
-                    <button
-                      key={batch.id}
-                      onClick={() => handleLoadFromHistory(batch.id)}
-                      className="w-full text-left bg-[#1e3a5f]/50 hover:bg-[#2d5a87]/50 border border-cyan-500/20 hover:border-cyan-400/40 rounded p-3 transition-all"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-mono text-cyan-200">{batch.filename || 'UNNAMED'}</span>
-                        <span className="text-sm text-cyan-400/70 font-mono">
-                          {batch.dark_periods_found} DETECTIONS
-                        </span>
-                      </div>
-                      <div className="text-xs text-cyan-500/50 mt-1 font-mono">
-                        {new Date(batch.created_at).toLocaleString().toUpperCase()}
-                      </div>
-                    </button>
-                  ))}
+          {/* Mission counters — first thing judges see */}
+          <div className="flex flex-1 divide-x divide-cyan-500/10">
+            {([
+              { label: 'VESSELS MONITORED', value: summary?.uniqueVessels ?? 0, sub: 'active AIS tracks', color: '#00d4ff', glow: false },
+              { label: 'AIS BLACKOUTS', value: darkPeriods.length, sub: 'transponder gaps detected', color: '#a78bfa', glow: false },
+              { label: 'CRITICAL', value: critical, sub: 'score ≥ 70 · act now', color: '#ff3366', glow: critical > 0 },
+              { label: 'HIGH', value: high, sub: 'score 50–69 · monitor', color: '#f97316', glow: false },
+              { label: 'MEDIUM', value: medium, sub: 'score 30–49 · flagged', color: '#ffb800', glow: false },
+            ] as Array<{ label: string; value: number; sub: string; color: string; glow: boolean }>).map(({ label, value, sub, color, glow }) => (
+              <div key={label} className="flex-1 px-4 py-2.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-bold tabular-nums" style={{ color, textShadow: glow && value > 0 ? `0 0 20px ${color}, 0 0 40px ${color}60` : 'none' }}>{value}</span>
+                  {glow && value > 0 && <span className="text-[9px] font-mono animate-pulse" style={{ color }}>● ACTIVE</span>}
                 </div>
+                <div className="text-[9px] font-mono tracking-widest" style={{ color: `${color}80` }}>{label}</div>
+                <div className="text-[8px] font-mono hidden lg:block" style={{ color: 'rgba(0,212,255,0.2)' }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 px-4 border-l border-cyan-500/15 flex-none">
+            {isLiveFeedActive && (
+              <div className="flex items-center gap-1.5 px-2 py-1 border border-cyan-400/30" style={{ background: 'rgba(0,212,255,0.06)' }}>
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-[9px] font-mono text-cyan-400 tracking-widest">LIVE</span>
               </div>
             )}
+            {darkPeriods.length > 0 && (<>
+              <button onClick={handleDownloadCSV} className="text-[9px] px-2 py-1 font-mono tracking-widest border border-cyan-500/25 text-cyan-400/60 hover:text-cyan-300 hover:bg-cyan-500/8 transition-colors">EXPORT</button>
+              <button onClick={handleSaveToSupabase} disabled={isSaving || saveStatus === 'saved'} className="text-[9px] px-2 py-1 font-mono tracking-widest border border-cyan-500/15 text-cyan-500/40 hover:text-cyan-400/60 transition-colors disabled:opacity-30">
+                {isSaving ? 'SAVING…' : saveStatus === 'saved' ? 'SAVED ✓' : 'SAVE DB'}
+              </button>
+              <button onClick={handleReset} className="text-[9px] px-2 py-1 font-mono tracking-widest border border-red-500/20 text-red-400/40 hover:text-red-400/70 transition-colors">RESET</button>
+            </>)}
+            <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+          </div>
+        </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
-                <div className="mt-4 flex justify-center gap-4 flex-wrap">
-                  <button
-                    onClick={handleDemo}
-                    className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] hover:shadow-[0_0_25px_rgba(0,212,255,0.5)] flex items-center gap-2"
-                  >
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    INITIALIZE DEMO SCAN
-                  </button>
-                  <button
-                    onClick={handleLoadAllFromDatabase}
-                    disabled={isLoading || dbCount === 0}
-                    className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-6 py-2.5 rounded font-mono text-sm tracking-wide transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                        LOADING...
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-cyan-400">▸</span>
-                        LOAD DATABASE {dbCount > 0 && `[${dbCount}]`}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <MagicScanner onSubscribe={handleScannerSubscribe} />
-              </div>
-            </div>
+        {/* Mission context bar */}
+        {darkPeriods.length > 0 ? (
+          <div className="flex items-center gap-4 px-5 py-1 text-[9px] font-mono" style={{ background: 'rgba(0,212,255,0.02)', borderBottom: '1px solid rgba(0,212,255,0.06)' }}>
+            <span style={{ color: 'rgba(0,212,255,0.35)', letterSpacing: '0.15em' }}>MISSION</span>
+            <span style={{ color: 'rgba(0,212,255,0.45)' }}>Detecting vessels that disable AIS transponders to conceal movement — sanctions evasion, unreported ship-to-ship transfers, ghost fleet activity</span>
+            <span className="ml-auto" style={{ color: 'rgba(0,212,255,0.25)' }}>
+              THRESHOLD: {minGapHours}H GAP
+              {filteredDarkPeriods.length !== darkPeriods.length && ` · ${filteredDarkPeriods.length}/${darkPeriods.length} FILTERED`}
+            </span>
+            {scoreChangeNotification?.visible && (
+              <span className="flex items-center gap-2" style={{ color: 'rgba(0,212,255,0.7)' }}>
+                ◉ RESCORED
+                {scoreChangeNotification.upgraded > 0 && <span style={{ color: TC.CRITICAL }}>▲{scoreChangeNotification.upgraded}</span>}
+                {scoreChangeNotification.downgraded > 0 && <span style={{ color: TC.LOW }}>▼{scoreChangeNotification.downgraded}</span>}
+              </span>
+            )}
           </div>
         ) : (
-          <div className="space-y-3">
-            {/* Top row: Stats and Live Feed */}
-            <div className="grid lg:grid-cols-5 gap-3 items-start">
-              <div className="lg:col-span-4">
-                <StatsCards
-                  darkPeriods={darkPeriods}
-                  totalVessels={summary?.uniqueVessels || 0}
-                  totalRecords={summary?.totalRecords || 0}
-                  onRiskFilter={setChartRiskFilter}
-                  activeRiskFilter={chartRiskFilter}
-                />
-              </div>
-              <div className="lg:col-span-1">
-                <LiveFeed
-                  onNewAlert={handleNewLiveAlert}
-                  isActive={isLiveFeedActive}
-                  onToggle={() => setIsLiveFeedActive(!isLiveFeedActive)}
-                />
-              </div>
-            </div>
-
-            {/* Score change notification */}
-            {scoreChangeNotification?.visible && (
-              <div className="fixed top-4 right-4 z-50 data-panel rounded-lg shadow-[0_0_30px_rgba(0,212,255,0.2)] p-4 max-w-sm border-l-4 border-l-cyan-400">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded bg-cyan-500/20 flex items-center justify-center">
-                    <span className="text-cyan-400 text-lg">◉</span>
-                  </div>
-                  <div>
-                    <p className="font-mono text-cyan-200 tracking-wide">RISK RECALCULATED</p>
-                    <div className="text-sm mt-2 space-y-1 font-mono">
-                      {scoreChangeNotification.upgraded > 0 && (
-                        <p className="text-red-400 flex items-center gap-2">
-                          <span>▲</span> {scoreChangeNotification.upgraded} VESSEL{scoreChangeNotification.upgraded > 1 ? 'S' : ''} ELEVATED
-                        </p>
-                      )}
-                      {scoreChangeNotification.downgraded > 0 && (
-                        <p className="text-green-400 flex items-center gap-2">
-                          <span>▼</span> {scoreChangeNotification.downgraded} VESSEL{scoreChangeNotification.downgraded > 1 ? 'S' : ''} REDUCED
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Vessel Detail Modal */}
-            {selectedPeriod && (
-              <VesselDetailModal
-                period={selectedPeriod}
-                onClose={() => setSelectedPeriod(null)}
-              />
-            )}
-
-            {/* Main content: Map + Table on left, Suspicious Ships + Charts on right */}
-            <div className="grid lg:grid-cols-5 gap-4">
-              {/* Left side: Tactical Map + Threat Analysis */}
-              <div className="lg:col-span-3 space-y-4">
-                <div className="data-panel rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
-                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
-                  </div>
-                  <div className="h-[350px]">
-                    <DarkPeriodsMap
-                      darkPeriods={darkPeriods}
-                      onSelectPeriod={setSelectedPeriod}
-                      isLiveScanning={isLiveFeedActive}
-                    />
-                  </div>
-                </div>
-
-                {/* Threat Analysis Table */}
-                <div className="data-panel rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
-                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
-                  </div>
-                  <div className="max-h-[220px] overflow-y-auto">
-                    <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right side: Suspicious Ships + Charts */}
-              <div className="lg:col-span-2 space-y-4">
-                {/* Suspicious Ships Card */}
-                <SuspiciousShipsCard
-                  darkPeriods={darkPeriods}
-                  onSelectVessel={setSelectedPeriod}
-                />
-
-                {/* Charts in a 2-column grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <RiskDistributionChart
-                    darkPeriods={darkPeriods}
-                    onRiskFilter={setChartRiskFilter}
-                    activeRiskFilter={chartRiskFilter}
-                  />
-                  <DurationHistogram
-                    darkPeriods={darkPeriods}
-                    onDurationFilter={handleDurationFilter}
-                    activeDurationFilter={chartDurationFilter}
-                  />
-                </div>
-
-                {/* Filter indicator */}
-                {(chartRiskFilter || chartDurationFilter.min != null) && (
-                  <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-2 flex items-center justify-between">
-                    <span className="text-cyan-300 text-xs font-mono">
-                      FILTERED: {filteredDarkPeriods.length}/{darkPeriods.length}
-                      {chartRiskFilter && ` // ${chartRiskFilter}`}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setChartRiskFilter(null);
-                        setChartDurationFilter({ min: null, max: null });
-                      }}
-                      className="text-[10px] bg-cyan-600/50 hover:bg-cyan-500/50 border border-cyan-400/30 px-2 py-0.5 rounded font-mono"
-                    >
-                      CLEAR
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Settings Modal */}
-            <SettingsModal
-              isOpen={isSettingsOpen}
-              onClose={() => setIsSettingsOpen(false)}
-              scoringFactors={scoringFactors}
-              onScoringChange={setScoringFactors}
-            />
-
-            <div className="flex gap-3 flex-wrap data-panel rounded-lg p-4">
-              <div className="text-cyan-400/60 font-mono text-xs mr-2 self-center">EXPORT:</div>
-              <button
-                onClick={handleDownloadCSV}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-cyan-400">▼</span> CSV
-              </button>
-              <button
-                onClick={handleDownloadJSON}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-cyan-400">▼</span> JSON
-              </button>
-              <button
-                onClick={handlePrint}
-                className="bg-[#1e3a5f] hover:bg-[#2d5a87] border border-cyan-500/30 hover:border-cyan-400/50 px-4 py-2 rounded font-mono text-sm transition-all print:hidden flex items-center gap-2"
-              >
-                <span className="text-cyan-400">◎</span> PRINT
-              </button>
-              <div className="w-px h-8 bg-cyan-500/20 self-center mx-2" />
-              <button
-                onClick={handleSaveToSupabase}
-                disabled={isSaving || saveStatus === 'saved'}
-                className="bg-green-600/30 hover:bg-green-500/40 border border-green-500/50 hover:border-green-400/70 px-4 py-2 rounded font-mono text-sm transition-all disabled:opacity-50 flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
-                    SAVING...
-                  </>
-                ) : saveStatus === 'saved' ? (
-                  <>
-                    <span className="text-green-400">✓</span> SAVED
-                  </>
-                ) : (
-                  <>
-                    <span className="text-green-400">▲</span> SAVE TO DB
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleReset}
-                className="bg-amber-600/30 hover:bg-amber-500/40 border border-amber-500/50 hover:border-amber-400/70 px-4 py-2 rounded font-mono text-sm transition-all flex items-center gap-2"
-              >
-                <span className="text-amber-400">↻</span> NEW SCAN
-              </button>
-            </div>
-            {saveStatus === 'error' && (
-              <p className="text-red-400 text-sm mt-2 font-mono">
-                ⚠ DATABASE CONNECTION FAILED // DATA AVAILABLE LOCALLY
-              </p>
-            )}
-
-            <DataGenerator onGenerate={(data) => {
-              setDarkPeriods(data);
-              setRecords([]);
-              setIsDemo(false);
-            }} />
+          <div className="flex items-center gap-3 px-5 py-1 text-[9px] font-mono" style={{ background: 'rgba(0,212,255,0.02)' }}>
+            <span style={{ color: 'rgba(255,179,0,0.5)' }}>◈ STANDBY</span>
+            <span style={{ color: 'rgba(0,212,255,0.3)' }}>No AIS data loaded · Run demo scan or upload vessel tracking CSV to begin blackout detection</span>
           </div>
         )}
+      </header>
 
-        {/* AI Chat Assistant */}
-        {darkPeriods.length > 0 && <ChatBox darkPeriods={darkPeriods} />}
+      {/* ══ BODY ══════════════════════════════════════════════════ */}
+      <div className="flex-1 overflow-hidden flex relative z-10 min-h-0">
+
+        {/* ── MAP: always dominant, always visible ── */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0">
+
+          <div className="flex-1 relative min-h-0">
+            {darkPeriods.length > 0 ? (
+              <DarkPeriodsMap darkPeriods={darkPeriods} onSelectPeriod={setSelectedPeriod} isLiveScanning={isLiveFeedActive} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(4,11,20,0.95)' }}>
+                <div className="text-center space-y-5 max-w-md px-4">
+                  <div className="font-mono text-5xl" style={{ color: 'rgba(0,212,255,0.12)' }}>◎</div>
+                  <div>
+                    <div className="font-mono text-sm tracking-[0.2em] mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>SURVEILLANCE SYSTEM STANDBY</div>
+                    <div className="font-mono text-[10px] leading-relaxed" style={{ color: 'rgba(0,212,255,0.25)' }}>
+                      Load AIS vessel tracking data to begin detecting ships that disable transponders to conceal movement — the core signature of sanctions evasion and unreported ship-to-ship transfers.
+                    </div>
+                  </div>
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={handleDemo}
+                      className="px-5 py-2.5 text-xs font-mono tracking-widest flex items-center gap-2 transition-all hover:opacity-90"
+                      style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.4)', color: '#00d4ff' }}>
+                      <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                      RUN DEMO SCAN
+                    </button>
+                    <button onClick={() => setRightPanel('ingest')}
+                      className="px-5 py-2.5 text-xs font-mono tracking-widest border border-cyan-500/20 transition-all hover:border-cyan-500/40"
+                      style={{ color: 'rgba(0,212,255,0.5)' }}>
+                      LOAD AIS DATA →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Map overlays when data loaded */}
+            {darkPeriods.length > 0 && (<>
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 font-mono text-xs"
+                style={{ background: 'rgba(4,11,20,0.93)', border: '1px solid rgba(0,212,255,0.2)', color: 'rgba(0,212,255,0.65)' }}>
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/50" />
+                {darkPeriods.length} AIS BLACKOUTS MAPPED
+                {isLiveFeedActive && <span className="animate-pulse ml-1" style={{ color: '#00d4ff' }}>· LIVE</span>}
+              </div>
+              <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
+                {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map(level => {
+                  const count = darkPeriods.filter(d => d.riskLevel === level).length;
+                  if (!count) return null;
+                  return (
+                    <div key={level} className="flex items-center gap-2 px-2 py-1 font-mono text-[10px]"
+                      style={{ background: 'rgba(4,11,20,0.9)', border: `1px solid ${TC[level]}25` }}>
+                      <div className="w-1.5 h-1.5 rounded-full flex-none" style={{ background: TC[level], boxShadow: `0 0 4px ${TC[level]}` }} />
+                      <span className="font-bold" style={{ color: TC[level] }}>{count}</span>
+                      <span style={{ color: `${TC[level]}70` }}>{level}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>)}
+          </div>
+
+          {/* BLACKOUT INTEL MATRIX — vessel table, always below map */}
+          {darkPeriods.length > 0 && (
+            <div className="flex-none border-t border-cyan-500/15" style={{ height: '185px', background: 'rgba(4,11,20,0.98)' }}>
+              <div className="flex items-center gap-3 px-4 py-1.5 border-b border-cyan-500/10">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(0,212,255,0.5)' }} />
+                <span className="text-[10px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.45)' }}>BLACKOUT INTEL MATRIX</span>
+                <span className="text-[9px] font-mono" style={{ color: 'rgba(0,212,255,0.2)' }}>RANKED BY THREAT SCORE</span>
+                {(chartRiskFilter || chartDurationFilter.min != null) && (
+                  <button onClick={() => { setChartRiskFilter(null); setChartDurationFilter({ min: null, max: null }); }}
+                    className="ml-auto text-[9px] font-mono px-2 py-0.5 border border-cyan-500/20 transition-colors hover:border-cyan-500/40"
+                    style={{ color: 'rgba(0,212,255,0.4)' }}>
+                    CLEAR FILTER ×
+                  </button>
+                )}
+              </div>
+              <div className="overflow-auto" style={{ height: 'calc(185px - 32px)' }}>
+                <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT PANEL: SOC Threat Feed ── */}
+        <aside className="flex-none w-96 flex flex-col border-l border-cyan-500/20 min-h-0" style={{ background: 'rgba(4,11,20,0.98)' }}>
+
+          {/* Panel header with tab switcher */}
+          <div className="flex-none border-b border-cyan-500/15 px-4 py-2.5 flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full flex-none" style={{ background: 'rgba(0,212,255,0.6)', boxShadow: '0 0 6px rgba(0,212,255,0.4)' }} />
+            <span className="text-[10px] font-mono tracking-[0.18em] font-bold flex-1" style={{ color: '#00d4ff' }}>
+              {rightPanel === 'threats' ? 'AIS BLACKOUT MONITOR' : rightPanel === 'analytics' ? 'THREAT ANALYTICS' : 'DATA INGEST'}
+            </span>
+            <div className="flex items-center gap-1">
+              {(['threats', 'analytics', 'ingest'] as RightPanel[]).map(p => (
+                <button key={p} onClick={() => setRightPanel(p)}
+                  className="text-[8px] font-mono tracking-widest px-2 py-1 transition-all"
+                  style={{
+                    color: rightPanel === p ? '#00d4ff' : 'rgba(0,212,255,0.3)',
+                    background: rightPanel === p ? 'rgba(0,212,255,0.1)' : 'transparent',
+                    border: `1px solid ${rightPanel === p ? 'rgba(0,212,255,0.3)' : 'transparent'}`,
+                  }}>
+                  {p === 'threats' ? 'THREATS' : p === 'analytics' ? 'ANALYTICS' : 'DATA'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+
+            {/* ── THREATS: SOC alert cards ── */}
+            {rightPanel === 'threats' && (
+              <div>
+                {darkPeriods.length === 0 ? (
+                  <div className="p-8 text-center space-y-4">
+                    <div className="text-4xl font-mono" style={{ color: 'rgba(0,212,255,0.1)' }}>◎</div>
+                    <div className="text-[10px] font-mono tracking-widest leading-relaxed" style={{ color: 'rgba(0,212,255,0.3)' }}>
+                      NO BLACKOUTS DETECTED<br />Load AIS data to monitor vessels
+                    </div>
+                    <button onClick={() => setRightPanel('ingest')}
+                      className="text-[10px] font-mono tracking-widest px-4 py-2 border border-cyan-500/20 transition-colors hover:border-cyan-500/40"
+                      style={{ color: 'rgba(0,212,255,0.5)' }}>
+                      LOAD DATA →
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Threat level filter bar */}
+                    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-cyan-500/10">
+                      <span className="text-[8px] font-mono mr-1" style={{ color: 'rgba(0,212,255,0.25)' }}>FILTER</span>
+                      {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map(level => {
+                        const count = darkPeriods.filter(d => d.riskLevel === level).length;
+                        const active = chartRiskFilter === level;
+                        return (
+                          <button key={level} onClick={() => setChartRiskFilter(active ? null : level)}
+                            className="flex items-center gap-1 px-2 py-0.5 transition-all font-mono"
+                            style={{
+                              border: `1px solid ${active ? TC[level] : TC[level] + '30'}`,
+                              background: active ? `${TC[level]}18` : 'transparent',
+                            }}>
+                            <span className="text-xs font-bold tabular-nums" style={{ color: TC[level] }}>{count}</span>
+                            <span className="text-[8px]" style={{ color: `${TC[level]}80` }}>{level[0]}</span>
+                          </button>
+                        );
+                      })}
+                      <span className="ml-auto text-[8px] font-mono" style={{ color: 'rgba(0,212,255,0.2)' }}>CLICK TO FILTER</span>
+                    </div>
+
+                    {/* Ghost vessel alert cards */}
+                    {(chartRiskFilter ? darkPeriods.filter(d => d.riskLevel === chartRiskFilter) : darkPeriods).map((dp, i) => {
+                      const color = TC[dp.riskLevel];
+                      const sel = selectedPeriod?.mmsi === dp.mmsi && selectedPeriod?.lastSeenTime === dp.lastSeenTime;
+                      return (
+                        <div key={`${dp.mmsi}-${i}`}
+                          className="border-b transition-all cursor-pointer"
+                          style={{ borderColor: 'rgba(0,212,255,0.07)', borderLeft: `3px solid ${color}`, background: sel ? `${color}0e` : 'transparent' }}
+                          onClick={() => setSelectedPeriod(sel ? null : dp)}
+                          onMouseOver={e => { if (!sel) (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'; }}
+                          onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = sel ? `${color}0e` : 'transparent'; }}>
+                          <div className="px-3 py-2.5">
+                            {/* Header: vessel ID + threat badge */}
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div>
+                                <div className="text-[8px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.3)' }}>GHOST VESSEL</div>
+                                <div className="text-sm font-mono font-bold tabular-nums" style={{ color: 'rgba(0,212,255,0.9)' }}>{dp.mmsi}</div>
+                              </div>
+                              <div className="text-right flex-none">
+                                <div className="text-[10px] font-mono font-bold px-1.5 py-0.5" style={{ color, border: `1px solid ${color}45`, background: `${color}10` }}>{dp.riskLevel}</div>
+                                <div className="text-xs font-mono font-bold mt-0.5 tabular-nums" style={{ color }}>{dp.suspicionScore}/100</div>
+                              </div>
+                            </div>
+
+                            {/* Threat score bar */}
+                            <div className="w-full h-0.5 mb-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,212,255,0.1)' }}>
+                              <div className="h-full rounded-full" style={{ width: `${dp.suspicionScore}%`, background: color, boxShadow: `0 0 4px ${color}` }} />
+                            </div>
+
+                            {/* Key metrics */}
+                            <div className="grid grid-cols-3 gap-1 mb-2">
+                              {[
+                                { label: 'AIS DARK', value: `${dp.gapHours.toFixed(0)}H`, alert: dp.gapHours > 48 },
+                                { label: 'DARK DIST', value: `${dp.distanceNm.toFixed(0)}NM`, alert: dp.distanceNm > 200 },
+                                { label: 'IMPLIED SPD', value: `${dp.impliedSpeedKnots.toFixed(1)}KT`, alert: dp.impliedSpeedKnots > 25 },
+                              ].map(({ label, value, alert }) => (
+                                <div key={label} className="px-1.5 py-1 text-center" style={{ background: 'rgba(0,212,255,0.03)', border: '1px solid rgba(0,212,255,0.07)' }}>
+                                  <div className="text-[7px] font-mono tracking-wider" style={{ color: 'rgba(0,212,255,0.3)' }}>{label}</div>
+                                  <div className="text-[11px] font-mono font-bold" style={{ color: alert ? color : 'rgba(0,212,255,0.75)' }}>{value}</div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Why flagged */}
+                            <div className="space-y-0.5">
+                              {dp.reasons.slice(0, 3).map((r, ri) => (
+                                <div key={ri} className="text-[9px] font-mono flex items-start gap-1">
+                                  <span className="flex-none" style={{ color: `${color}70` }}>▸</span>
+                                  <span className="truncate" style={{ color: 'rgba(0,212,255,0.45)' }}>{r}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {sel && (
+                              <button onClick={e => { e.stopPropagation(); }}
+                                className="mt-2 w-full text-[9px] font-mono py-1.5 tracking-widest transition-all"
+                                style={{ border: `1px solid ${color}40`, color, background: `${color}0e` }}>
+                                OPEN FULL INTEL REPORT ▶
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Live monitoring toggle */}
+                    <div className="p-3 border-t border-cyan-500/10">
+                      <LiveFeed onNewAlert={handleNewLiveAlert} isActive={isLiveFeedActive} onToggle={() => setIsLiveFeedActive(v => !v)} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── ANALYTICS ── */}
+            {rightPanel === 'analytics' && (
+              <div className="p-3 space-y-3">
+                {darkPeriods.length === 0 ? (
+                  <div className="py-16 text-center text-[10px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.25)' }}>NO DATA · LOAD AIS DATA FIRST</div>
+                ) : (<>
+                  <StatsCards darkPeriods={darkPeriods} totalVessels={summary?.uniqueVessels ?? 0} totalRecords={summary?.totalRecords ?? 0} />
+                  <div className="data-panel p-3">
+                    <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>BLACKOUT THREAT DISTRIBUTION</div>
+                    <RiskDistributionChart darkPeriods={darkPeriods} onRiskFilter={setChartRiskFilter} activeRiskFilter={chartRiskFilter} />
+                  </div>
+                  <div className="data-panel p-3">
+                    <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>BLACKOUT DURATION HISTOGRAM</div>
+                    <DurationHistogram darkPeriods={darkPeriods} onDurationFilter={handleDurationFilter} activeDurationFilter={chartDurationFilter} />
+                  </div>
+                  <div className="data-panel p-3">
+                    <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>THREAT SCORING WEIGHTS</div>
+                    <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
+                  </div>
+                  <div className="data-panel p-3">
+                    <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>AI MARITIME ANALYST</div>
+                    <ChatBox darkPeriods={darkPeriods} />
+                  </div>
+                </>)}
+              </div>
+            )}
+
+            {/* ── DATA INGEST ── */}
+            {rightPanel === 'ingest' && (
+              <div className="p-3 space-y-3">
+                {/* Mission brief */}
+                <div className="p-3 border border-cyan-500/15" style={{ background: 'rgba(0,212,255,0.03)' }}>
+                  <div className="text-[9px] font-mono tracking-widest mb-1.5" style={{ color: 'rgba(0,212,255,0.4)' }}>WHAT THIS TOOL DETECTS</div>
+                  <p className="text-[9px] font-mono leading-relaxed" style={{ color: 'rgba(0,212,255,0.45)' }}>
+                    Ships disable AIS to hide location — creating gaps where they could be conducting illegal transfers, evading sanctions, or operating as ghost vessels. This tool scores each gap by duration, distance traveled dark, implied speed anomalies, and proximity to known transshipment zones.
+                  </p>
+                </div>
+
+                <div className="data-panel p-3">
+                  <div className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'rgba(0,212,255,0.4)' }}>LOAD AIS TRACKING DATA</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[9px] font-mono tracking-widest whitespace-nowrap" style={{ color: 'rgba(0,212,255,0.4)' }}>MIN GAP</span>
+                    <input type="number" value={minGapHours} onChange={e => setMinGapHours(Number(e.target.value))}
+                      className="w-14 px-2 py-1 text-xs font-mono border focus:outline-none"
+                      style={{ background: '#060e1a', borderColor: 'rgba(0,212,255,0.25)', color: 'rgba(0,212,255,0.8)' }}
+                      min={1} max={72} />
+                    <span className="text-[9px] font-mono" style={{ color: 'rgba(0,212,255,0.3)' }}>HRS · CSV: MMSI/LAT/LON/TIMESTAMP</span>
+                  </div>
+                  <FileUpload onFileLoad={handleFileLoad} isLoading={isLoading} />
+                </div>
+
+                <div className="data-panel p-3">
+                  <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>QUICK SCENARIOS</div>
+                  <div className="space-y-2">
+                    <button onClick={handleDemo}
+                      className="w-full px-3 py-3 text-xs font-mono tracking-widest flex items-center gap-3 transition-all hover:opacity-90 text-left"
+                      style={{ background: 'rgba(0,212,255,0.07)', border: '1px solid rgba(0,212,255,0.3)', color: '#00d4ff' }}>
+                      <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse flex-none" />
+                      <div>
+                        <div className="font-bold">DEMO: GHOST FLEET SCENARIO</div>
+                        <div className="text-[8px] mt-0.5" style={{ color: 'rgba(0,212,255,0.5)' }}>S. China Sea · Hormuz · 5 vessels with mixed threats</div>
+                      </div>
+                    </button>
+                    <button onClick={handleLoadAllFromDatabase} disabled={isLoading || dbCount === 0}
+                      className="w-full px-3 py-2 text-xs font-mono tracking-widest border text-left transition-colors disabled:opacity-30"
+                      style={{ borderColor: 'rgba(0,212,255,0.15)', color: 'rgba(0,212,255,0.5)' }}>
+                      {isLoading ? 'LOADING…' : `LOAD FROM DATABASE ${dbCount ? `[${dbCount} DETECTIONS]` : '[EMPTY]'}`}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="data-panel p-3">
+                  <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>GENERATE TEST DATA</div>
+                  <DataGenerator onGenerate={(data) => { setDarkPeriods(data); setRecords([]); setIsDemo(false); setRightPanel('threats'); }} />
+                </div>
+
+                {uploadHistory.length > 0 && (
+                  <div className="data-panel">
+                    <button onClick={() => setShowHistory(v => !v)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 text-[10px] font-mono tracking-widest transition-colors"
+                      style={{ color: 'rgba(0,212,255,0.4)' }}>
+                      <span>PREVIOUS ANALYSES [{uploadHistory.length}]</span>
+                      <span>{showHistory ? '▲' : '▼'}</span>
+                    </button>
+                    {showHistory && uploadHistory.slice(0, 5).map(batch => (
+                      <button key={batch.id} onClick={() => handleLoadFromHistory(batch.id)}
+                        className="w-full flex items-center justify-between px-3 py-2 border-t text-left transition-colors hover:bg-cyan-500/5"
+                        style={{ borderColor: 'rgba(0,212,255,0.08)' }}>
+                        <span className="text-xs font-mono truncate mr-2" style={{ color: 'rgba(0,212,255,0.7)' }}>{batch.filename ?? 'UNNAMED'}</span>
+                        <span className="text-[10px] font-mono flex-none" style={{ color: 'rgba(0,212,255,0.5)' }}>{batch.dark_periods_found} detections</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="data-panel p-3">
+                  <div className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgba(0,212,255,0.4)' }}>ALERT SUBSCRIPTIONS</div>
+                  <MagicScanner onSubscribe={handleScannerSubscribe} />
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
-    </main>
+
+      {selectedPeriod && <VesselDetailModal period={selectedPeriod} onClose={() => setSelectedPeriod(null)} />}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} scoringFactors={scoringFactors} onScoringChange={setScoringFactors} />
+
+      <footer className="flex-none flex items-center justify-between px-5 py-1 border-t relative z-10" style={{ background: '#040b14', borderColor: 'rgba(0,212,255,0.1)' }}>
+        <div className="flex items-center gap-4">
+          {([['AIS PARSER', true], ['THREAT SCORER', true], ['OPEN-METEO', true], ['OPENSANCTIONS', true], ['SUPABASE', !!supabase]] as [string, boolean][]).map(([label, active]) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: active ? '#00ff88' : 'rgba(255,255,255,0.08)', boxShadow: active ? '0 0 4px #00ff88' : 'none' }} />
+              <span className="text-[8px] font-mono" style={{ color: active ? 'rgba(0,255,136,0.45)' : 'rgba(255,255,255,0.12)' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+        <span className="text-[8px] font-mono tracking-widest" style={{ color: 'rgba(0,212,255,0.15)' }}>GHOST FLEET DETECTOR · 3RD ANNUAL NATSEC HACKATHON · MARITIME DOMAIN AWARENESS</span>
+      </footer>
+    </div>
   );
 }
