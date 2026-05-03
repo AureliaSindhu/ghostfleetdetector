@@ -1,21 +1,23 @@
 import Papa from 'papaparse';
 import { AISRecord } from '@/types';
 
+type AISCsvRow = Partial<Record<string, string>>;
+
 export function parseAISData(csvText: string): AISRecord[] {
-  const result = Papa.parse(csvText, {
+  const result = Papa.parse<AISCsvRow>(csvText, {
     header: true,
     skipEmptyLines: true,
     transformHeader: (header) => header.toUpperCase().trim(),
   });
 
-  return result.data.map((row: any) => ({
-    mmsi: String(row.MMSI || row.mmsi),
-    timestamp: new Date(row.TIMESTAMP || row.BASEDATETIME || row.timestamp),
-    latitude: parseFloat(row.LATITUDE || row.LAT || row.latitude),
-    longitude: parseFloat(row.LONGITUDE || row.LON || row.longitude),
-    sog: parseFloat(row.SOG || row.sog) || undefined,
-    cog: parseFloat(row.COG || row.cog) || undefined,
-    shipType: parseInt(row.SHIPTYPE || row.shiptype) || undefined,
+  return result.data.map((row) => ({
+    mmsi: String(row.MMSI || row.mmsi || ''),
+    timestamp: new Date(row.TIMESTAMP || row.BASEDATETIME || row.timestamp || ''),
+    latitude: parseFloat(row.LATITUDE || row.LAT || row.latitude || ''),
+    longitude: parseFloat(row.LONGITUDE || row.LON || row.longitude || ''),
+    sog: parseFloat(row.SOG || row.sog || '') || undefined,
+    cog: parseFloat(row.COG || row.cog || '') || undefined,
+    shipType: parseInt(row.SHIPTYPE || row.shiptype || '') || undefined,
     shipName: row.SHIPNAME || row.NAME || row.shipname,
     flag: row.FLAG || row.flag,
   }));

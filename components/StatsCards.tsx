@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { ScoredDarkPeriod } from '@/types';
-import { Ship, AlertTriangle, AlertCircle, CheckCircle, Radio, Clock, Navigation } from 'lucide-react';
+import { Ship, AlertTriangle, AlertCircle, CheckCircle, Navigation } from 'lucide-react';
 
 interface StatsCardsProps {
   darkPeriods: ScoredDarkPeriod[];

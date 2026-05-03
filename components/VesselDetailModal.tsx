@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, CloudRain, Shield, Loader2, CloudLightning } from 'lucide-react';
 import { ScoredDarkPeriod, WeatherData, SanctionsResult } from '@/types';
 import { IntelReport } from './IntelReport';
 import { getWeatherAtLocation, assessWeatherSeverity } from '@/lib/weather';
 import { checkVesselSanctions } from '@/lib/sanctions';
-import { checkStormOverlap, StormData } from '@/lib/storms';
+import { checkStormOverlap } from '@/lib/storms';
 
 interface VesselDetailModalProps {
   period: ScoredDarkPeriod;
@@ -25,7 +25,10 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [sanctions, setSanctions] = useState<SanctionsResult | null>(null);
   const [sanctionsLoading, setSanctionsLoading] = useState(true);
-  const [stormCheck, setStormCheck] = useState<{ inStorm: boolean; storm: StormData | null } | null>(null);
+  const stormCheck = useMemo(
+    () => checkStormOverlap(period.lastLat, period.lastLon, period.lastSeenTime),
+    [period.lastLat, period.lastLon, period.lastSeenTime]
+  );
 
   // Keyboard handler for Escape
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -40,21 +43,20 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    // Fetch weather data
-    setWeatherLoading(true);
-    getWeatherAtLocation(period.lastLat, period.lastLon, period.lastSeenTime)
-      .then(setWeather)
-      .finally(() => setWeatherLoading(false));
+    const timer = window.setTimeout(() => {
+      setWeatherLoading(true);
+      getWeatherAtLocation(period.lastLat, period.lastLon, period.lastSeenTime)
+        .then(setWeather)
+        .finally(() => setWeatherLoading(false));
 
-    // Check sanctions (using MMSI as a proxy - in reality you'd have vessel name/flag)
-    setSanctionsLoading(true);
-    checkVesselSanctions(undefined, undefined, undefined)
-      .then(setSanctions)
-      .finally(() => setSanctionsLoading(false));
+      // Check sanctions (using MMSI as a proxy - in reality you'd have vessel name/flag)
+      setSanctionsLoading(true);
+      checkVesselSanctions(undefined, undefined, undefined)
+        .then(setSanctions)
+        .finally(() => setSanctionsLoading(false));
+    }, 0);
 
-    // Check for storm overlap
-    const storm = checkStormOverlap(period.lastLat, period.lastLon, period.lastSeenTime);
-    setStormCheck(storm);
+    return () => window.clearTimeout(timer);
   }, [period]);
 
   const weatherAssessment = weather ? assessWeatherSeverity(weather) : null;

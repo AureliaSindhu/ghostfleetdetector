@@ -86,7 +86,7 @@ export function RiskDistributionChart({
         )}
       </div>
       {onRiskFilter && (
-        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">// CLICK SEGMENT TO FILTER</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">{'// CLICK SEGMENT TO FILTER'}</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
@@ -175,7 +175,7 @@ export function DurationHistogram({
         )}
       </div>
       {onDurationFilter && (
-        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">// CLICK BAR TO FILTER</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-sans">{'// CLICK BAR TO FILTER'}</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>

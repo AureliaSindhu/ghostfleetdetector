@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Radio, Pause, Play, AlertTriangle } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
-import { SAMPLE_DARK_PERIODS } from '@/lib/sampleData';
 
 interface LiveFeedProps {
   onNewAlert: (alert: ScoredDarkPeriod) => void;

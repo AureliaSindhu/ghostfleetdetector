@@ -14,8 +14,10 @@ export function RadarOverlay({ isScanning, scanId = 0, onScanComplete }: RadarOv
 
   useEffect(() => {
     if (isScanning) {
-      setShowOverlay(true);
-      setScanProgress(0);
+      const startTimer = setTimeout(() => {
+        setShowOverlay(true);
+        setScanProgress(0);
+      }, 0);
 
       const fillTimer = setTimeout(() => {
         setScanProgress(100);
@@ -27,6 +29,7 @@ export function RadarOverlay({ isScanning, scanId = 0, onScanComplete }: RadarOv
       }, 850);
 
       return () => {
+        clearTimeout(startTimer);
         clearTimeout(fillTimer);
         clearTimeout(completeTimer);
       };

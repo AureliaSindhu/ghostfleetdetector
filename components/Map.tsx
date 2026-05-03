@@ -1,12 +1,11 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, ArcLayer, GeoJsonLayer } from '@deck.gl/layers';
+import DeckGL, { type DeckGLProps } from '@deck.gl/react';
+import { ScatterplotLayer, ArcLayer } from '@deck.gl/layers';
 import { Map as MapGL } from 'react-map-gl/mapbox';
 import { Maximize2, Minimize2, Globe, Map, Target } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
-import { _GlobeView as GlobeView, MapView } from '@deck.gl/core';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -49,21 +48,24 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
     bearing: 0,
   });
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize view state when dark periods load for the first time
   useEffect(() => {
     if (darkPeriods.length > 0 && !hasInitialized) {
       const avgLat = darkPeriods.reduce((sum, d) => sum + d.lastLat, 0) / darkPeriods.length;
       const avgLon = darkPeriods.reduce((sum, d) => sum + d.lastLon, 0) / darkPeriods.length;
-      setViewState({
-        longitude: avgLon,
-        latitude: avgLat,
-        zoom: 2,
-        pitch: 0,
-        bearing: 0,
-      });
-      setHasInitialized(true);
+      const timer = window.setTimeout(() => {
+        setViewState({
+          longitude: avgLon,
+          latitude: avgLat,
+          zoom: 2,
+          pitch: 0,
+          bearing: 0,
+        });
+        setHasInitialized(true);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [darkPeriods, hasInitialized]);
 
@@ -81,11 +83,16 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
     }
   }, [darkPeriods]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleViewStateChange = useCallback((params: any) => {
-    if (params.viewState) {
-      setViewState(params.viewState);
-    }
+  const handleViewStateChange = useCallback<NonNullable<DeckGLProps['onViewStateChange']>>((params) => {
+    const nextViewState = params.viewState as Partial<ViewState>;
+
+    setViewState((prev) => ({
+      longitude: nextViewState.longitude ?? prev.longitude,
+      latitude: nextViewState.latitude ?? prev.latitude,
+      zoom: nextViewState.zoom ?? prev.zoom,
+      pitch: nextViewState.pitch ?? prev.pitch,
+      bearing: nextViewState.bearing ?? prev.bearing,
+    }));
   }, []);
 
   const layers = useMemo(() => {
