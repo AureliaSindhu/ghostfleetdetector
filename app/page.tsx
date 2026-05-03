@@ -9,7 +9,7 @@ import { StatsCards } from '@/components/StatsCards';
 import { VesselDetailModal } from '@/components/VesselDetailModal';
 import { parseAISData, validateAISData, groupByVessel, getDataSummary } from '@/lib/dataLoader';
 import { findAllDarkPeriods } from '@/lib/detector';
-import { scoreAllDarkPeriods } from '@/lib/scorer';
+import { scoreAllDarkPeriods, rescoreAllWithFactors } from '@/lib/scorer';
 import { ScoredDarkPeriod, AISRecord } from '@/types';
 import { SAMPLE_DARK_PERIODS, SAMPLE_SUMMARY } from '@/lib/sampleData';
 import { useSupabase } from '@/lib/supabase/hooks';
@@ -40,6 +40,48 @@ export default function Home() {
 
   // Scoring configuration
   const [scoringFactors, setScoringFactors] = useState<ScoringFactors>(DEFAULT_SCORING_FACTORS);
+  const [scoreChangeNotification, setScoreChangeNotification] = useState<{
+    upgraded: number;
+    downgraded: number;
+    visible: boolean;
+  } | null>(null);
+
+  // Rescore dark periods when scoring factors change
+  useEffect(() => {
+    if (darkPeriods.length > 0) {
+      const rescored = rescoreAllWithFactors(darkPeriods, scoringFactors);
+
+      // Track risk level changes
+      let upgraded = 0;
+      let downgraded = 0;
+      const riskOrder = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+      rescored.forEach((newDp, i) => {
+        const oldDp = darkPeriods[i];
+        if (oldDp) {
+          const oldIdx = riskOrder.indexOf(oldDp.riskLevel);
+          const newIdx = riskOrder.indexOf(newDp.riskLevel);
+          if (newIdx > oldIdx) upgraded++;
+          if (newIdx < oldIdx) downgraded++;
+        }
+      });
+
+      const scoresChanged = rescored.some(
+        (dp, i) => dp.suspicionScore !== darkPeriods[i]?.suspicionScore
+      );
+
+      if (scoresChanged) {
+        setDarkPeriods(rescored);
+        if (upgraded > 0 || downgraded > 0) {
+          setScoreChangeNotification({ upgraded, downgraded, visible: true });
+          setTimeout(() => {
+            setScoreChangeNotification((prev) => prev ? { ...prev, visible: false } : null);
+          }, 3000);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoringFactors]);
 
   const handleNewLiveAlert = useCallback((alert: ScoredDarkPeriod) => {
     setDarkPeriods((prev) => [alert, ...prev]);
@@ -51,6 +93,12 @@ export default function Home() {
   }, []);
 
   const supabase = useSupabase();
+
+  // Auto-load demo data on mount for better first impression
+  useEffect(() => {
+    setDarkPeriods(SAMPLE_DARK_PERIODS);
+    setIsDemo(true);
+  }, []);
 
   // Load history and count on mount
   useEffect(() => {
@@ -321,6 +369,30 @@ export default function Home() {
             </div>
 
             <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
+
+            {/* Score change notification */}
+            {scoreChangeNotification?.visible && (
+              <div className="fixed top-4 right-4 z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-4 max-w-sm animate-pulse">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">📊</div>
+                  <div>
+                    <p className="font-semibold text-white">Scores Updated</p>
+                    <div className="text-sm text-gray-300 mt-1 space-y-1">
+                      {scoreChangeNotification.upgraded > 0 && (
+                        <p className="text-red-400">
+                          ↑ {scoreChangeNotification.upgraded} vessel{scoreChangeNotification.upgraded > 1 ? 's' : ''} increased risk
+                        </p>
+                      )}
+                      {scoreChangeNotification.downgraded > 0 && (
+                        <p className="text-green-400">
+                          ↓ {scoreChangeNotification.downgraded} vessel{scoreChangeNotification.downgraded > 1 ? 's' : ''} decreased risk
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-gray-800 rounded-lg p-4">
               <h2 className="text-xl font-semibold mb-4">🗺️ Dark Periods Map</h2>

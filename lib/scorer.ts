@@ -1,4 +1,5 @@
 import { DarkPeriod, ScoredDarkPeriod, TransshipmentZone } from '@/types';
+import { ScoringFactors } from '@/components/ScoringConfig';
 
 const TRANSSHIPMENT_ZONES: TransshipmentZone[] = [
   { name: 'South China Sea', latMin: 5, latMax: 25, lonMin: 105, lonMax: 120 },
@@ -102,5 +103,79 @@ export function calculateSuspicionScore(
 export function scoreAllDarkPeriods(darkPeriods: DarkPeriod[]): ScoredDarkPeriod[] {
   return darkPeriods
     .map((dp) => calculateSuspicionScore(dp))
+    .sort((a, b) => b.suspicionScore - a.suspicionScore);
+}
+
+// Dynamic scoring with custom factors
+export function calculateScoreWithFactors(
+  darkPeriod: DarkPeriod,
+  factors: ScoringFactors
+): ScoredDarkPeriod {
+  let score = 0;
+  const reasons: string[] = [];
+
+  // Dark period duration
+  if (darkPeriod.gapHours >= 72) {
+    score += factors.darkPeriodOver72h;
+    reasons.push(`⏰ Extended dark period: ${darkPeriod.gapHours.toFixed(0)} hours (+${factors.darkPeriodOver72h})`);
+  } else if (darkPeriod.gapHours >= 24) {
+    score += factors.darkPeriod24to72h;
+    reasons.push(`⏰ Long dark period: ${darkPeriod.gapHours.toFixed(0)} hours (+${factors.darkPeriod24to72h})`);
+  } else if (darkPeriod.gapHours >= 12) {
+    score += factors.darkPeriod12to24h;
+    reasons.push(`⏰ Dark period: ${darkPeriod.gapHours.toFixed(0)} hours (+${factors.darkPeriod12to24h})`);
+  } else if (darkPeriod.gapHours >= 6) {
+    score += factors.darkPeriod6to12h;
+    reasons.push(`⏰ Suspicious gap: ${darkPeriod.gapHours.toFixed(0)} hours (+${factors.darkPeriod6to12h})`);
+  }
+
+  // Distance while dark
+  if (darkPeriod.distanceNm > 200) {
+    score += factors.distanceOver200nm;
+    reasons.push(`📍 Large distance while dark: ${darkPeriod.distanceNm.toFixed(0)} nm (+${factors.distanceOver200nm})`);
+  } else if (darkPeriod.distanceNm > 100) {
+    score += factors.distance100to200nm;
+    reasons.push(`📍 Significant distance: ${darkPeriod.distanceNm.toFixed(0)} nm (+${factors.distance100to200nm})`);
+  }
+
+  // Transshipment zone
+  const zoneCheck = inTransshipmentZone(darkPeriod.lastLat, darkPeriod.lastLon);
+  if (zoneCheck.inZone) {
+    score += factors.inTransshipmentZone;
+    reasons.push(`🗺️ In transshipment zone: ${zoneCheck.zoneName} (+${factors.inTransshipmentZone})`);
+  }
+
+  // Impossible speed
+  if (darkPeriod.impliedSpeedKnots > 30) {
+    score += factors.impossibleSpeed;
+    reasons.push(`⚡ Impossible speed: ${darkPeriod.impliedSpeedKnots.toFixed(1)} knots (+${factors.impossibleSpeed})`);
+  }
+
+  // Went dark at night
+  const hour = darkPeriod.lastSeenTime.getHours();
+  if (hour >= 22 || hour <= 5) {
+    score += factors.wentDarkAtNight;
+    reasons.push(`🌙 Went dark at night (+${factors.wentDarkAtNight})`);
+  }
+
+  // Clamp score to 0-100
+  score = Math.max(0, Math.min(100, score));
+
+  // Determine risk level
+  let riskLevel: ScoredDarkPeriod['riskLevel'];
+  if (score >= 70) riskLevel = 'CRITICAL';
+  else if (score >= 50) riskLevel = 'HIGH';
+  else if (score >= 30) riskLevel = 'MEDIUM';
+  else riskLevel = 'LOW';
+
+  return { ...darkPeriod, suspicionScore: score, riskLevel, reasons };
+}
+
+export function rescoreAllWithFactors(
+  darkPeriods: ScoredDarkPeriod[],
+  factors: ScoringFactors
+): ScoredDarkPeriod[] {
+  return darkPeriods
+    .map((dp) => calculateScoreWithFactors(dp, factors))
     .sort((a, b) => b.suspicionScore - a.suspicionScore);
 }
