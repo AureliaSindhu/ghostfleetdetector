@@ -101,6 +101,7 @@ export function RiskDistributionChart({
             labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)' }}
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onRiskFilter ? 'pointer' : 'default' }}
+            isAnimationActive={false}
           >
             {data.map((entry) => (
               <Cell
@@ -186,6 +187,7 @@ export function DurationHistogram({
             fill="#0891b2"
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onDurationFilter ? 'pointer' : 'default' }}
+            isAnimationActive={false}
           >
             {data.map((entry) => (
               <Cell
