@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚢 Ghost Fleet Detector
 
-## Getting Started
+> **Detecting ships that "go dark" to evade sanctions, smuggle cargo, and fish illegally.**
 
-First, run the development server:
+## 🎯 The Problem
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Every commercial vessel over 300 tons must broadcast its position via AIS. But ships doing illegal things **intentionally turn off their transponders**:
+
+- **Sanctions Evasion** — Russian/Iranian tankers hiding oil transfers ($Billions)
+- **Illegal Fishing (IUU)** — $23B/year global problem, linked to forced labor
+- **Smuggling** — Drugs, weapons, human trafficking
+- **Ship-to-Ship Transfers** — Hiding cargo origins to bypass restrictions
+
+## 💡 Our Approach
+
+Most sensor analysis fuses data that exists. **We detect ABSENCE** — finding patterns in missing data.
+
+```
+──●────●────●────○────○────○────●────●──
+  ^transmitting  ^DARK 3 days  ^back online
+                 Score: 85/100 🚨
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repo
+2. Install dependencies: `npm install`
+3. Create `.env.local` in the project root:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+   ANTHROPIC_API_KEY=your_anthropic_api_key        # optional - for AI reports
+   SENTINEL_CLIENT_ID=your_sentinel_client_id      # optional - for satellite imagery
+   SENTINEL_CLIENT_SECRET=your_sentinel_secret     # optional - for satellite imagery
+   ```
+4. Set up Supabase:
+   ```bash
+   brew install supabase/tap/supabase   # macOS/Linux
+   supabase login
+   supabase link --project-ref your-project-ref
+   supabase db push
+   ```
+5. Run dev server: `npm run dev`
+6. Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📡 Data Sources
 
-## Learn More
+| Source | Purpose | Cost |
+|--------|---------|------|
+| 🗄️ Supabase | Database & Auth | FREE (500MB) |
+| 🚢 Kaggle AIS | Vessel positions | FREE |
+| 🌤️ Open-Meteo | Weather correlation | FREE |
+| 🚫 OpenSanctions | Sanctions check | FREE |
+| ⛈️ NOAA NHC | Storm data | FREE |
+| 🛰️ Sentinel Hub | Satellite imagery | FREE tier |
+| 🗺️ Mapbox | Map rendering | FREE tier |
+| 🤖 Anthropic Claude | AI intel reports | Pay per use |
 
-To learn more about Next.js, take a look at the following resources:
+## 🎯 Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Dark period detection** — finds AIS gaps exceeding a configurable threshold
+- **Multi-factor suspicion scoring** — duration, distance, transshipment zones, implied speed, ship type, time of day
+- **Weather-adjusted risk** — severe weather reduces suspicion score
+- **Storm correlation** — NOAA storm data explains legitimate dark periods
+- **Sanctions integration** — OpenSanctions API + sanctioned flag state lookup
+- **Satellite imagery** — Sentinel Hub verification of dark period locations
+- **Interactive map** — deck.gl scatter + arc layers with tooltips
+- **Charts** — risk distribution pie chart and duration histogram
+- **AI intel reports** — Claude-generated intelligence summaries
+- **CSV export** — download results for offline analysis
+- **Demo mode** — sample South China Sea / Strait of Hormuz data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🏗️ Tech Stack
 
-## Deploy on Vercel
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth |
+| Maps | deck.gl + react-map-gl |
+| Charts | Recharts |
+| CSV Parsing | PapaParse |
+| AI | Anthropic Claude |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎤 Pitch
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> "Every ship over 300 tons must broadcast its position. But ships doing illegal things — sanctions evasion, smuggling, illegal fishing — turn off their transponders to hide. This is a $23 billion problem. We detect them by finding patterns in MISSING data."
