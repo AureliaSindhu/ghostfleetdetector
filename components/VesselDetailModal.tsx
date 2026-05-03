@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, CloudRain, Shield, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, CloudRain, Shield, Loader2, CloudLightning } from 'lucide-react';
 import { ScoredDarkPeriod, WeatherData, SanctionsResult } from '@/types';
 import { IntelReport } from './IntelReport';
 import { getWeatherAtLocation, assessWeatherSeverity } from '@/lib/weather';
 import { checkVesselSanctions } from '@/lib/sanctions';
+import { checkStormOverlap, StormData } from '@/lib/storms';
 
 interface VesselDetailModalProps {
   period: ScoredDarkPeriod;
@@ -24,6 +25,19 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [sanctions, setSanctions] = useState<SanctionsResult | null>(null);
   const [sanctionsLoading, setSanctionsLoading] = useState(true);
+  const [stormCheck, setStormCheck] = useState<{ inStorm: boolean; storm: StormData | null } | null>(null);
+
+  // Keyboard handler for Escape
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     // Fetch weather data
@@ -37,6 +51,10 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
     checkVesselSanctions(undefined, undefined, undefined)
       .then(setSanctions)
       .finally(() => setSanctionsLoading(false));
+
+    // Check for storm overlap
+    const storm = checkStormOverlap(period.lastLat, period.lastLon, period.lastSeenTime);
+    setStormCheck(storm);
   }, [period]);
 
   const weatherAssessment = weather ? assessWeatherSeverity(weather) : null;
@@ -52,7 +70,12 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
       >
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-2xl font-bold text-white">Vessel {period.mmsi}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white flex items-center gap-1"
+            title="Press Escape to close"
+          >
+            <span className="text-xs text-gray-500">ESC</span>
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -80,8 +103,16 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
                 {period.lastSeenTime.toLocaleString()}
               </p>
               <p>
+                <span className="text-gray-400">Last position:</span>{' '}
+                {period.lastLat.toFixed(4)}°, {period.lastLon.toFixed(4)}°
+              </p>
+              <p>
                 <span className="text-gray-400">Reappeared:</span>{' '}
                 {period.reappearTime.toLocaleString()}
+              </p>
+              <p>
+                <span className="text-gray-400">Reappear position:</span>{' '}
+                {period.reappearLat.toFixed(4)}°, {period.reappearLon.toFixed(4)}°
               </p>
               <p>
                 <span className="text-gray-400">Duration:</span>{' '}
@@ -146,6 +177,27 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
             <p className="text-gray-400">Weather data unavailable</p>
           )}
         </div>
+
+        {/* Storm Section */}
+        {stormCheck && (
+          <div className="mt-4 bg-gray-700/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-2 text-white flex items-center gap-2">
+              <CloudLightning className="w-5 h-5" />
+              Storm Activity
+            </h3>
+            {stormCheck.inStorm && stormCheck.storm ? (
+              <div className="bg-green-900/50 text-green-300 p-2 rounded">
+                ✅ {stormCheck.storm.name} ({stormCheck.storm.category}) was active in this area
+                <br />
+                <span className="text-sm">This may explain the AIS gap (-40 points)</span>
+              </div>
+            ) : (
+              <div className="bg-gray-600/50 text-gray-300 p-2 rounded">
+                ✓ No major storms recorded in this area during the dark period
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Sanctions Section */}
         <div className="mt-4 bg-gray-700/50 rounded-lg p-4">
