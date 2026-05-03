@@ -411,9 +411,10 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="grid lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3">
+          <div className="space-y-4">
+            {/* Top row: Stats and Live Feed */}
+            <div className="grid lg:grid-cols-5 gap-4">
+              <div className="lg:col-span-4">
                 <StatsCards
                   darkPeriods={darkPeriods}
                   totalVessels={summary?.uniqueVessels || 0}
@@ -428,8 +429,6 @@ export default function Home() {
                 />
               </div>
             </div>
-
-            <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
 
             {/* Score change notification */}
             {scoreChangeNotification?.visible && (
@@ -457,19 +456,6 @@ export default function Home() {
               </div>
             )}
 
-            <div className="data-panel rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
-                <h2 className="text-xl font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
-              </div>
-              <DarkPeriodsMap
-                darkPeriods={darkPeriods}
-                onSelectPeriod={setSelectedPeriod}
-                isLiveScanning={isLiveFeedActive}
-              />
-            </div>
-
             {/* Vessel Detail Modal */}
             {selectedPeriod && (
               <VesselDetailModal
@@ -478,46 +464,75 @@ export default function Home() {
               />
             )}
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <RiskDistributionChart
-                darkPeriods={darkPeriods}
-                onRiskFilter={setChartRiskFilter}
-                activeRiskFilter={chartRiskFilter}
-              />
-              <DurationHistogram
-                darkPeriods={darkPeriods}
-                onDurationFilter={handleDurationFilter}
-                activeDurationFilter={chartDurationFilter}
-              />
+            {/* Main content: Map on left, Charts/Table on right */}
+            <div className="grid lg:grid-cols-5 gap-4">
+              {/* Left side: Tactical Map */}
+              <div className="lg:col-span-3">
+                <div className="data-panel rounded-lg p-4 h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#00d4ff]" />
+                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">TACTICAL MAP</h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/30 to-transparent" />
+                  </div>
+                  <div className="h-[calc(100vh-320px)] min-h-[400px]">
+                    <DarkPeriodsMap
+                      darkPeriods={darkPeriods}
+                      onSelectPeriod={setSelectedPeriod}
+                      isLiveScanning={isLiveFeedActive}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side: Charts and Threat Analysis */}
+              <div className="lg:col-span-2 space-y-4">
+                {/* Charts stacked vertically */}
+                <RiskDistributionChart
+                  darkPeriods={darkPeriods}
+                  onRiskFilter={setChartRiskFilter}
+                  activeRiskFilter={chartRiskFilter}
+                />
+                <DurationHistogram
+                  darkPeriods={darkPeriods}
+                  onDurationFilter={handleDurationFilter}
+                  activeDurationFilter={chartDurationFilter}
+                />
+
+                {/* Filter indicator */}
+                {(chartRiskFilter || chartDurationFilter.min != null) && (
+                  <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-2 flex items-center justify-between">
+                    <span className="text-cyan-300 text-xs font-mono">
+                      FILTERED: {filteredDarkPeriods.length}/{darkPeriods.length}
+                      {chartRiskFilter && ` // ${chartRiskFilter}`}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setChartRiskFilter(null);
+                        setChartDurationFilter({ min: null, max: null });
+                      }}
+                      className="text-[10px] bg-cyan-600/50 hover:bg-cyan-500/50 border border-cyan-400/30 px-2 py-0.5 rounded font-mono"
+                    >
+                      CLEAR
+                    </button>
+                  </div>
+                )}
+
+                {/* Threat Analysis Table */}
+                <div className="data-panel rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
+                    <h2 className="text-lg font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {(chartRiskFilter || chartDurationFilter.min != null) && (
-              <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-cyan-300 text-sm font-mono">
-                  FILTERED: {filteredDarkPeriods.length}/{darkPeriods.length} DETECTIONS
-                  {chartRiskFilter && ` // ${chartRiskFilter} RISK`}
-                  {chartDurationFilter.min != null && ` // ${chartDurationFilter.min}-${chartDurationFilter.max === Infinity ? '72+' : chartDurationFilter.max}H`}
-                </span>
-                <button
-                  onClick={() => {
-                    setChartRiskFilter(null);
-                    setChartDurationFilter({ min: null, max: null });
-                  }}
-                  className="text-xs bg-cyan-600/50 hover:bg-cyan-500/50 border border-cyan-400/30 px-3 py-1 rounded font-mono"
-                >
-                  CLEAR FILTERS
-                </button>
-              </div>
-            )}
-
-            <div className="data-panel rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_6px_#f87171] animate-pulse" />
-                <h2 className="text-xl font-semibold text-cyan-100 font-mono tracking-wide">THREAT ANALYSIS</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 to-transparent" />
-              </div>
-              <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
-            </div>
+            {/* Scoring Config - collapsible or in a drawer could be nice */}
+            <ScoringConfig factors={scoringFactors} onChange={setScoringFactors} />
 
             <div className="flex gap-3 flex-wrap data-panel rounded-lg p-4">
               <div className="text-cyan-400/60 font-mono text-xs mr-2 self-center">EXPORT:</div>

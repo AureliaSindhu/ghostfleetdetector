@@ -129,7 +129,7 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
 
   return (
     <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
-      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
+      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-full min-h-[400px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
         {/* Radar Sweep Overlay - Continuous when live scanning */}
         {isLiveScanning && (
           <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden opacity-60">

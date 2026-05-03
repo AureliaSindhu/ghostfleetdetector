@@ -1,7 +1,8 @@
 'use client';
 
+import { useMemo } from 'react';
 import { ScoredDarkPeriod } from '@/types';
-import { Ship, AlertTriangle, AlertCircle, CheckCircle, Radio } from 'lucide-react';
+import { Ship, AlertTriangle, AlertCircle, CheckCircle, Radio, Clock, Navigation } from 'lucide-react';
 
 interface StatsCardsProps {
   darkPeriods: ScoredDarkPeriod[];
@@ -10,66 +11,109 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ darkPeriods, totalVessels }: StatsCardsProps) {
-  const critical = darkPeriods.filter((dp) => dp.riskLevel === 'CRITICAL').length;
-  const high = darkPeriods.filter((dp) => dp.riskLevel === 'HIGH').length;
-  const medium = darkPeriods.filter((dp) => dp.riskLevel === 'MEDIUM').length;
-  const low = darkPeriods.filter((dp) => dp.riskLevel === 'LOW').length;
+  const stats = useMemo(() => {
+    const critical = darkPeriods.filter((dp) => dp.riskLevel === 'CRITICAL');
+    const high = darkPeriods.filter((dp) => dp.riskLevel === 'HIGH');
+    const medium = darkPeriods.filter((dp) => dp.riskLevel === 'MEDIUM');
+    const low = darkPeriods.filter((dp) => dp.riskLevel === 'LOW');
+
+    const avgScore = (arr: ScoredDarkPeriod[]) =>
+      arr.length > 0 ? Math.round(arr.reduce((sum, dp) => sum + dp.suspicionScore, 0) / arr.length) : 0;
+
+    const avgGapHours = (arr: ScoredDarkPeriod[]) =>
+      arr.length > 0 ? Math.round(arr.reduce((sum, dp) => sum + dp.gapHours, 0) / arr.length) : 0;
+
+    const maxGapHours = darkPeriods.length > 0
+      ? Math.round(Math.max(...darkPeriods.map(dp => dp.gapHours)))
+      : 0;
+
+    const totalDistance = Math.round(darkPeriods.reduce((sum, dp) => sum + dp.distanceNm, 0));
+
+    return {
+      critical: { count: critical.length, avgScore: avgScore(critical), avgGap: avgGapHours(critical) },
+      high: { count: high.length, avgScore: avgScore(high), avgGap: avgGapHours(high) },
+      medium: { count: medium.length, avgScore: avgScore(medium), avgGap: avgGapHours(medium) },
+      low: { count: low.length, avgScore: avgScore(low), avgGap: avgGapHours(low) },
+      maxGapHours,
+      totalDistance,
+    };
+  }, [darkPeriods]);
+
+  const total = darkPeriods.length || 1;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <StatCard
-        icon={<Ship className="w-5 h-5" />}
-        label="VESSELS"
+        icon={<Ship className="w-4 h-4" />}
+        label="VESSELS TRACKED"
         value={totalVessels.toLocaleString()}
         color="cyan"
         glowColor="rgba(0, 212, 255, 0.3)"
+        subtitle={`${darkPeriods.length} dark periods`}
       />
-      <StatCard
-        icon={<Radio className="w-5 h-5" />}
-        label="DARK PERIODS"
-        value={darkPeriods.length.toLocaleString()}
-        color="cyan"
-        glowColor="rgba(0, 212, 255, 0.3)"
-      />
-      <StatCard
-        icon={<AlertTriangle className="w-5 h-5" />}
+      <RiskStatCard
+        icon={<AlertTriangle className="w-4 h-4" />}
         label="CRITICAL"
-        value={critical}
+        count={stats.critical.count}
+        percentage={Math.round((stats.critical.count / total) * 100)}
+        avgScore={stats.critical.avgScore}
+        avgGap={stats.critical.avgGap}
         color="red"
         glowColor="rgba(255, 51, 102, 0.3)"
-        pulse={critical > 0}
+        pulse={stats.critical.count > 0}
+        scoreRange="70-100"
       />
-      <StatCard
-        icon={<AlertCircle className="w-5 h-5" />}
+      <RiskStatCard
+        icon={<AlertCircle className="w-4 h-4" />}
         label="HIGH"
-        value={high}
+        count={stats.high.count}
+        percentage={Math.round((stats.high.count / total) * 100)}
+        avgScore={stats.high.avgScore}
+        avgGap={stats.high.avgGap}
         color="orange"
         glowColor="rgba(249, 115, 22, 0.3)"
+        scoreRange="50-69"
       />
-      <StatCard
-        icon={<AlertCircle className="w-5 h-5" />}
+      <RiskStatCard
+        icon={<AlertCircle className="w-4 h-4" />}
         label="MEDIUM"
-        value={medium}
+        count={stats.medium.count}
+        percentage={Math.round((stats.medium.count / total) * 100)}
+        avgScore={stats.medium.avgScore}
+        avgGap={stats.medium.avgGap}
         color="yellow"
         glowColor="rgba(234, 179, 8, 0.3)"
+        scoreRange="30-49"
       />
-      <StatCard
-        icon={<CheckCircle className="w-5 h-5" />}
+      <RiskStatCard
+        icon={<CheckCircle className="w-4 h-4" />}
         label="LOW"
-        value={low}
+        count={stats.low.count}
+        percentage={Math.round((stats.low.count / total) * 100)}
+        avgScore={stats.low.avgScore}
+        avgGap={stats.low.avgGap}
         color="green"
         glowColor="rgba(0, 255, 136, 0.3)"
+        scoreRange="0-29"
+      />
+      <StatCard
+        icon={<Navigation className="w-4 h-4" />}
+        label="LONGEST DARK"
+        value={`${stats.maxGapHours}h`}
+        color="cyan"
+        glowColor="rgba(0, 212, 255, 0.3)"
+        subtitle={`${stats.totalDistance.toLocaleString()} nm total`}
       />
     </div>
   );
 }
 
-const colorClasses: Record<string, { text: string; bg: string; border: string }> = {
-  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30' },
-  red: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' },
-  orange: { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
-  yellow: { text: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
-  green: { text: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30' },
+const colorClasses: Record<string, { text: string; bg: string; border: string; barBg: string }> = {
+  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', barBg: 'bg-cyan-500' },
+  red: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', barBg: 'bg-red-500' },
+  orange: { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', barBg: 'bg-orange-500' },
+  yellow: { text: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', barBg: 'bg-yellow-500' },
+  green: { text: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/30', barBg: 'bg-green-500' },
 };
 
 function StatCard({
@@ -78,37 +122,103 @@ function StatCard({
   value,
   color,
   glowColor,
-  pulse = false,
+  subtitle,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
   color: string;
   glowColor: string;
-  pulse?: boolean;
+  subtitle?: string;
 }) {
   const classes = colorClasses[color] || colorClasses.cyan;
 
   return (
     <div
-      className={`relative bg-[#0d1f35] rounded-lg p-4 border ${classes.border} overflow-hidden`}
-      style={{ boxShadow: `0 0 20px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
+      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden`}
+      style={{ boxShadow: `0 0 15px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
     >
-      {/* Corner accent */}
-      <div className={`absolute top-0 left-0 w-8 h-px ${classes.bg}`} style={{ background: `linear-gradient(90deg, ${glowColor}, transparent)` }} />
-      <div className={`absolute top-0 left-0 h-8 w-px ${classes.bg}`} style={{ background: `linear-gradient(180deg, ${glowColor}, transparent)` }} />
+      <div className={`absolute top-0 left-0 w-6 h-px`} style={{ background: `linear-gradient(90deg, ${glowColor}, transparent)` }} />
+      <div className={`absolute top-0 left-0 h-6 w-px`} style={{ background: `linear-gradient(180deg, ${glowColor}, transparent)` }} />
 
-      <div className="flex items-center gap-2 mb-2">
-        <div className={`${classes.text} ${pulse ? 'animate-pulse' : ''}`}>
-          {icon}
-        </div>
-        <span className={`text-xs font-mono ${classes.text} opacity-70 tracking-wider`}>{label}</span>
+      <div className="flex items-center gap-1.5 mb-1">
+        <div className={`${classes.text}`}>{icon}</div>
+        <span className={`text-[10px] font-mono ${classes.text} opacity-70 tracking-wider`}>{label}</span>
       </div>
-      <div className={`text-3xl font-bold font-mono tabular-nums ${classes.text}`}>
+      <div className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>
         {value}
       </div>
+      {subtitle && (
+        <div className="text-[10px] text-cyan-500/50 font-mono mt-1">{subtitle}</div>
+      )}
 
-      {/* Bottom accent line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)` }} />
+    </div>
+  );
+}
+
+function RiskStatCard({
+  icon,
+  label,
+  count,
+  percentage,
+  avgScore,
+  avgGap,
+  color,
+  glowColor,
+  pulse = false,
+  scoreRange,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  percentage: number;
+  avgScore: number;
+  avgGap: number;
+  color: string;
+  glowColor: string;
+  pulse?: boolean;
+  scoreRange: string;
+}) {
+  const classes = colorClasses[color] || colorClasses.cyan;
+
+  return (
+    <div
+      className={`relative bg-[#0d1f35] rounded-lg p-3 border ${classes.border} overflow-hidden`}
+      style={{ boxShadow: `0 0 15px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)` }}
+    >
+      <div className={`absolute top-0 left-0 w-6 h-px`} style={{ background: `linear-gradient(90deg, ${glowColor}, transparent)` }} />
+      <div className={`absolute top-0 left-0 h-6 w-px`} style={{ background: `linear-gradient(180deg, ${glowColor}, transparent)` }} />
+
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          <div className={`${classes.text} ${pulse ? 'animate-pulse' : ''}`}>{icon}</div>
+          <span className={`text-[10px] font-mono ${classes.text} opacity-70 tracking-wider`}>{label}</span>
+        </div>
+        <span className="text-[9px] font-mono text-cyan-500/40">[{scoreRange}]</span>
+      </div>
+
+      <div className="flex items-baseline gap-2">
+        <span className={`text-2xl font-bold font-mono tabular-nums ${classes.text}`}>{count}</span>
+        <span className="text-xs font-mono text-cyan-400/50">{percentage}%</span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mt-2 h-1 bg-[#132743] rounded-full overflow-hidden">
+        <div
+          className={`h-full ${classes.barBg} transition-all duration-500`}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
+
+      {/* Additional stats */}
+      {count > 0 && (
+        <div className="mt-2 flex justify-between text-[9px] font-mono text-cyan-500/50">
+          <span>AVG: {avgScore} pts</span>
+          <span>{avgGap}h gap</span>
+        </div>
+      )}
+
       <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${glowColor}, transparent)` }} />
     </div>
   );
