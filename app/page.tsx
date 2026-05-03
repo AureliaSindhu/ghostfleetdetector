@@ -419,9 +419,9 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Top row: Stats and Live Feed */}
-            <div className="grid lg:grid-cols-5 gap-4">
+            <div className="grid lg:grid-cols-5 gap-3 items-start">
               <div className="lg:col-span-4">
                 <StatsCards
                   darkPeriods={darkPeriods}
