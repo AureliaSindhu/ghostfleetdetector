@@ -170,7 +170,7 @@ export function DataGenerator({ onGenerate }: DataGeneratorProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="items-center gap-3 flex flex-wrap space-y-2">
           <label className="text-xs text-cyan-400/70 font-mono flex items-center gap-2">
             COUNT:
             <input

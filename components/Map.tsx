@@ -128,8 +128,8 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
   }, [darkPeriods]);
 
   return (
-    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
-      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-full min-h-[400px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
+    <div className={`relative h-full ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
+      <div className={`w-full h-full overflow-hidden border border-cyan-500/20 relative ${isFullscreen ? '' : 'rounded-none'}`}>
         {/* Radar Sweep Overlay - Continuous when live scanning */}
         {isLiveScanning && (
           <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden opacity-60">
@@ -237,28 +237,29 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
         </DeckGL>
       </div>
 
-      {/* Legend - Naval Style */}
-      <div className="absolute bottom-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 rounded-lg p-3 text-sm">
-        <div className="font-mono text-cyan-400/80 text-xs tracking-wider mb-2 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-          THREAT LEVELS
+      {isFullscreen && (
+        <div className="absolute bottom-4 left-4 bg-[#0d1f35]/95 backdrop-blur border border-cyan-500/30 rounded-md p-3 text-sm shadow-[0_12px_35px_rgba(0,0,0,0.45)]">
+          <div className="font-mono text-cyan-400/80 text-xs tracking-wider mb-2 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+            THREAT LEVELS
+          </div>
+          <div className="space-y-1.5">
+            {RISK_LABELS.map(({ level, color, textColor, label }) => (
+              <div key={level} className="flex items-center gap-2 font-mono text-xs">
+                <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm`} />
+                <span className={`${textColor}`}>{label}</span>
+                <span className="text-cyan-500/50 ml-auto tabular-nums">[{riskCounts[level]}]</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 pt-2 border-t border-cyan-500/20 text-cyan-500/50 text-xs font-mono">
+            TOTAL: {darkPeriods.length} CONTACTS
+          </div>
         </div>
-        <div className="space-y-1.5">
-          {RISK_LABELS.map(({ level, color, textColor, label }) => (
-            <div key={level} className="flex items-center gap-2 font-mono text-xs">
-              <span className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm`} />
-              <span className={`${textColor}`}>{label}</span>
-              <span className="text-cyan-500/50 ml-auto tabular-nums">[{riskCounts[level]}]</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 pt-2 border-t border-cyan-500/20 text-cyan-500/50 text-xs font-mono">
-          TOTAL: {darkPeriods.length} CONTACTS
-        </div>
-      </div>
+      )}
 
       {/* Map Controls - Naval Style */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <div className={`absolute ${isFullscreen ? 'top-4 right-4' : 'top-20 right-[408px]'} flex flex-col gap-2`}>
         {/* Center on Data */}
         <button
           onClick={handleCenterOnData}
