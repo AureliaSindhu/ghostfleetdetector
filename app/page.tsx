@@ -17,6 +17,7 @@ import { saveDarkPeriodsAnon, fetchAllDarkPeriods, fetchUploadHistory } from '@/
 import { LiveFeed } from '@/components/LiveFeed';
 import { ScoringConfig, ScoringFactors, DEFAULT_SCORING_FACTORS } from '@/components/ScoringConfig';
 import { MagicScanner } from '@/components/MagicScanner';
+import { DataGenerator } from '@/components/DataGenerator';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -485,6 +486,12 @@ export default function Home() {
                 Could not save to database. Data is still available locally.
               </p>
             )}
+
+            <DataGenerator onGenerate={(data) => {
+              setDarkPeriods(data);
+              setRecords([]);
+              setIsDemo(false);
+            }} />
           </div>
         )}
       </div>
