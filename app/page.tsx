@@ -6,6 +6,8 @@ import { DarkPeriodsMap } from '@/components/Map';
 import { RiskDistributionChart, DurationHistogram } from '@/components/Charts';
 import { VesselTable } from '@/components/VesselTable';
 import { StatsCards } from '@/components/StatsCards';
+import { VesselDetailModal } from '@/components/VesselDetailModal';
+import { IntelReport } from '@/components/IntelReport';
 import { parseAISData, validateAISData, groupByVessel, getDataSummary } from '@/lib/dataLoader';
 import { findAllDarkPeriods } from '@/lib/detector';
 import { scoreAllDarkPeriods } from '@/lib/scorer';
@@ -125,12 +127,15 @@ export default function Home() {
                 darkPeriods={darkPeriods}
                 onSelectPeriod={setSelectedPeriod}
               />
-              {selectedPeriod && (
-                <p className="mt-2 text-sm text-gray-400">
-                  Selected: MMSI {selectedPeriod.mmsi} — {selectedPeriod.riskLevel} ({selectedPeriod.suspicionScore}/100)
-                </p>
-              )}
             </div>
+
+            {/* Vessel Detail Modal */}
+            {selectedPeriod && (
+              <VesselDetailModal
+                period={selectedPeriod}
+                onClose={() => setSelectedPeriod(null)}
+              />
+            )}
 
             <div className="grid md:grid-cols-2 gap-6">
               <RiskDistributionChart darkPeriods={darkPeriods} />

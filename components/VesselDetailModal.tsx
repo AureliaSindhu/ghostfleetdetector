@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { ScoredDarkPeriod } from '@/types';
+import { IntelReport } from './IntelReport';
 
 interface VesselDetailModalProps {
   period: ScoredDarkPeriod;
@@ -84,6 +85,9 @@ export function VesselDetailModal({ period, onClose }: VesselDetailModalProps) {
             ))}
           </ul>
         </div>
+
+        {/* AI Intelligence Report */}
+        <IntelReport darkPeriod={period} />
       </div>
     </div>
   );
