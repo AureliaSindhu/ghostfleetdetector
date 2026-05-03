@@ -97,7 +97,7 @@ export function RiskDistributionChart({
             cx="50%"
             cy="50%"
             outerRadius={65}
-            label={({ name, value }) => `${name[0]}:${value}`}
+            label={({ name, value }) => `${(name || '')[0]}:${value}`}
             labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)' }}
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onRiskFilter ? 'pointer' : 'default' }}

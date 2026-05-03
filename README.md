@@ -30,7 +30,8 @@ Most sensor analysis fuses data that exists. **We detect ABSENCE** — finding p
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
-   ANTHROPIC_API_KEY=your_anthropic_api_key        # optional - for AI reports
+   OPENAI_API_KEY=your_openai_api_key              # optional - for AI chat assistant
+   RESEND_API_KEY=your_resend_api_key              # optional - for email reports
    SENTINEL_CLIENT_ID=your_sentinel_client_id      # optional - for satellite imagery
    SENTINEL_CLIENT_SECRET=your_sentinel_secret     # optional - for satellite imagery
    ```
