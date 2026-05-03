@@ -15,10 +15,25 @@ import {
 import { ScoredDarkPeriod } from '@/types';
 
 const RISK_COLORS = {
-  CRITICAL: '#ff0000',
-  HIGH: '#ffa500',
-  MEDIUM: '#ffff00',
-  LOW: '#00ff00',
+  CRITICAL: '#ff3366',
+  HIGH: '#f97316',
+  MEDIUM: '#eab308',
+  LOW: '#22c55e',
+};
+
+// Custom tooltip component with proper styling
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; payload?: { name?: string } }>; label?: string }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    const riskLevel = data.payload?.name || label;
+    return (
+      <div className="bg-[#0d1f35] border border-cyan-500/30 rounded-lg p-3 shadow-lg">
+        <p className="font-mono text-cyan-300 text-sm mb-1">{riskLevel}</p>
+        <p className="font-mono text-white text-lg font-bold">{data.value} vessels</p>
+      </div>
+    );
+  }
+  return null;
 };
 
 interface ChartsProps {
@@ -55,20 +70,23 @@ export function RiskDistributionChart({
   };
 
   return (
-    <div className="bg-gray-900 p-4 rounded-lg">
+    <div className="bg-[#0d1f35] p-4 rounded-lg border border-cyan-500/20" style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)' }}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-white text-lg font-semibold">Risk Distribution</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-cyan-400 rounded-full" />
+          <h3 className="text-cyan-100 text-sm font-mono tracking-wide">RISK DISTRIBUTION</h3>
+        </div>
         {activeRiskFilter && (
           <button
             onClick={() => onRiskFilter?.(null)}
-            className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300"
+            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-mono"
           >
-            Clear filter
+            CLEAR
           </button>
         )}
       </div>
       {onRiskFilter && (
-        <p className="text-xs text-gray-500 mb-2">Click a segment to filter the table</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-mono">// CLICK SEGMENT TO FILTER</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
@@ -80,6 +98,7 @@ export function RiskDistributionChart({
             cy="50%"
             outerRadius={80}
             label={({ name, value }) => `${name}: ${value}`}
+            labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)' }}
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onRiskFilter ? 'pointer' : 'default' }}
           >
@@ -88,13 +107,15 @@ export function RiskDistributionChart({
                 key={entry.name}
                 fill={RISK_COLORS[entry.name as keyof typeof RISK_COLORS]}
                 opacity={activeRiskFilter && activeRiskFilter !== entry.name ? 0.3 : 1}
-                stroke={activeRiskFilter === entry.name ? '#fff' : 'none'}
+                stroke={activeRiskFilter === entry.name ? '#00d4ff' : 'none'}
                 strokeWidth={activeRiskFilter === entry.name ? 2 : 0}
               />
             ))}
           </Pie>
-          <Tooltip />
-          <Legend />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend
+            wrapperStyle={{ color: '#67e8f9', fontFamily: 'monospace', fontSize: '12px' }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -137,42 +158,45 @@ export function DurationHistogram({
     activeDurationFilter?.min === min && activeDurationFilter?.max === max;
 
   return (
-    <div className="bg-gray-900 p-4 rounded-lg">
+    <div className="bg-[#0d1f35] p-4 rounded-lg border border-cyan-500/20" style={{ boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)' }}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-white text-lg font-semibold">Duration Distribution</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-cyan-400 rounded-full" />
+          <h3 className="text-cyan-100 text-sm font-mono tracking-wide">DURATION DISTRIBUTION</h3>
+        </div>
         {activeDurationFilter?.min != null && (
           <button
             onClick={() => onDurationFilter?.(null, null)}
-            className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-gray-300"
+            className="text-xs bg-cyan-600/30 hover:bg-cyan-500/40 border border-cyan-500/50 px-2 py-1 rounded text-cyan-300 font-mono"
           >
-            Clear filter
+            CLEAR
           </button>
         )}
       </div>
       {onDurationFilter && (
-        <p className="text-xs text-gray-500 mb-2">Click a bar to filter the table</p>
+        <p className="text-[10px] text-cyan-500/50 mb-2 font-mono">// CLICK BAR TO FILTER</p>
       )}
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
-          <XAxis dataKey="range" stroke="#fff" />
-          <YAxis stroke="#fff" />
-          <Tooltip />
+          <XAxis dataKey="range" stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'monospace', fontSize: 11 }} />
+          <YAxis stroke="#67e8f9" tick={{ fill: '#67e8f9', fontFamily: 'monospace', fontSize: 11 }} />
+          <Tooltip content={<CustomTooltip />} />
           <Bar
             dataKey="count"
-            fill="#3b82f6"
+            fill="#0891b2"
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onDurationFilter ? 'pointer' : 'default' }}
           >
             {data.map((entry) => (
               <Cell
                 key={entry.range}
-                fill={isBarActive(entry.min, entry.max) ? '#60a5fa' : '#3b82f6'}
+                fill={isBarActive(entry.min, entry.max) ? '#22d3ee' : '#0891b2'}
                 opacity={
                   activeDurationFilter?.min != null && !isBarActive(entry.min, entry.max)
                     ? 0.3
                     : 1
                 }
-                stroke={isBarActive(entry.min, entry.max) ? '#fff' : 'none'}
+                stroke={isBarActive(entry.min, entry.max) ? '#00d4ff' : 'none'}
                 strokeWidth={isBarActive(entry.min, entry.max) ? 2 : 0}
               />
             ))}

@@ -130,69 +130,66 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = f
   return (
     <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
       <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
-        {/* Radar Sweep Overlay - Active when live scanning */}
+        {/* Radar Sweep Overlay - Continuous when live scanning */}
         {isLiveScanning && (
-          <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden opacity-60">
             {/* Radar sweep line */}
             <div
               className="absolute top-1/2 left-1/2 w-[150%] h-[150%] -translate-x-1/2 -translate-y-1/2"
               style={{
-                animation: 'radar-scan 4s linear infinite',
+                animation: 'radar-scan 8s linear infinite',
               }}
             >
-              {/* Sweep beam */}
+              {/* Sweep beam - more transparent */}
               <div
-                className="absolute top-1/2 left-1/2 w-1/2 h-1"
+                className="absolute top-1/2 left-1/2 w-1/2 h-0.5"
                 style={{
-                  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.8) 0%, rgba(0, 212, 255, 0) 100%)',
+                  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.5) 0%, rgba(0, 212, 255, 0) 100%)',
                   transformOrigin: 'left center',
-                  boxShadow: '0 0 30px rgba(0, 212, 255, 0.6), 0 0 60px rgba(0, 212, 255, 0.3)',
+                  boxShadow: '0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.15)',
                 }}
               />
-              {/* Sweep trail cone */}
+              {/* Sweep trail cone - more transparent */}
               <div
                 className="absolute top-0 left-1/2 w-1/2 h-1/2 origin-bottom-left"
                 style={{
-                  background: 'conic-gradient(from -90deg, transparent 0deg, rgba(0, 212, 255, 0.15) 20deg, rgba(0, 212, 255, 0.05) 40deg, transparent 60deg)',
+                  background: 'conic-gradient(from -90deg, transparent 0deg, rgba(0, 212, 255, 0.08) 20deg, rgba(0, 212, 255, 0.03) 40deg, transparent 60deg)',
                   borderRadius: '100% 0 0 0',
                 }}
               />
             </div>
 
-            {/* Center ping */}
+            {/* Center ping - smaller and more subtle */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_20px_#00d4ff,0_0_40px_#00d4ff] animate-pulse" />
+              <div className="w-3 h-3 bg-cyan-400/70 rounded-full shadow-[0_0_15px_rgba(0,212,255,0.5)]" />
             </div>
 
-            {/* Concentric rings */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] border border-cyan-500/10 rounded-full" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] border border-cyan-500/10 rounded-full" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] border border-cyan-500/10 rounded-full" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] h-[20%] border border-cyan-500/10 rounded-full" />
+            {/* Concentric rings - more transparent */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] border border-cyan-500/5 rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] border border-cyan-500/5 rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] border border-cyan-500/5 rounded-full" />
 
-            {/* Crosshairs */}
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
-            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent" />
+            {/* Crosshairs - more subtle */}
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent" />
 
-            {/* Scanning status indicator */}
-            <div className="absolute top-3 left-3 bg-[#0d1f35]/90 border border-cyan-500/30 rounded px-3 py-1.5 flex items-center gap-2">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#00d4ff]" />
-              <span className="text-cyan-400 text-xs font-mono tracking-wider">SCANNING</span>
-            </div>
-
-            {/* Pulse rings emanating from center */}
+            {/* Pulse rings - slower and more transparent */}
             <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/50 rounded-full"
-              style={{ animation: 'radar-pulse 2s ease-out infinite' }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-cyan-400/30 rounded-full"
+              style={{ animation: 'radar-pulse 3s ease-out infinite' }}
             />
             <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/30 rounded-full"
-              style={{ animation: 'radar-pulse 2s ease-out infinite 0.5s' }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-cyan-400/20 rounded-full"
+              style={{ animation: 'radar-pulse 3s ease-out infinite 1s' }}
             />
-            <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/20 rounded-full"
-              style={{ animation: 'radar-pulse 2s ease-out infinite 1s' }}
-            />
+          </div>
+        )}
+
+        {/* Live scanning indicator - always visible when live */}
+        {isLiveScanning && (
+          <div className="absolute top-3 left-3 z-20 bg-[#0d1f35]/90 border border-cyan-500/30 rounded px-3 py-1.5 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]" />
+            <span className="text-cyan-400 text-xs font-mono tracking-wider">LIVE MONITORING</span>
           </div>
         )}
 
