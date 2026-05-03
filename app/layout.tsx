@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Ghost Fleet Detector",
-  description: "Ghost Fleet Detector",
+  description: "Ghost Fleet Detector - Detecting ships that 'go dark' to evade sanctions, smuggle cargo, and fish illegally.",
 };
 
 export default function RootLayout({
