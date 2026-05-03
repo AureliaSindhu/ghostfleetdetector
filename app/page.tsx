@@ -5,7 +5,6 @@ import { FileUpload } from '@/components/FileUpload';
 import { DarkPeriodsMap } from '@/components/Map';
 import { RiskDistributionChart } from '@/components/Charts';
 import { StatsCards } from '@/components/StatsCards';
-import { VesselDetailModal } from '@/components/VesselDetailModal';
 import { parseAISData, validateAISData, groupByVessel, getDataSummary } from '@/lib/dataLoader';
 import { findAllDarkPeriods } from '@/lib/detector';
 import { scoreAllDarkPeriods, rescoreAllWithFactors } from '@/lib/scorer';
@@ -40,8 +39,8 @@ export default function Home() {
 
   // Scoring configuration
   const [scoringFactors, setScoringFactors] = useState<ScoringFactors>(DEFAULT_SCORING_FACTORS);
-  // Radar scan animation state
   const [isRadarScanning, setIsRadarScanning] = useState(false);
+  const [scanId, setScanId] = useState(0);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   // Settings modal state
@@ -111,13 +110,17 @@ export default function Home() {
   );
 
   const handleDemo = () => {
+    setDarkPeriods(SAMPLE_DARK_PERIODS);
+    setRecords([]);
+    setSelectedPeriod(SAMPLE_DARK_PERIODS[0] ?? null);
+    setChartRiskFilter(null);
+    setIsDemo(true);
+    setRightPanel('threats');
+    setScanId((id) => id + 1);
     setIsRadarScanning(true);
   };
 
   const handleRadarScanComplete = () => {
-    setDarkPeriods(SAMPLE_DARK_PERIODS);
-    setRecords([]);
-    setIsDemo(true);
     setIsRadarScanning(false);
   };
 
@@ -217,7 +220,7 @@ export default function Home() {
 
   return (
     <div className="h-screen overflow-hidden bg-[#06111f] text-white relative">
-      <RadarOverlay isScanning={isRadarScanning} onScanComplete={handleRadarScanComplete} />
+      <RadarOverlay isScanning={isRadarScanning} scanId={scanId} onScanComplete={handleRadarScanComplete} />
 
       <main className="absolute inset-0 z-0">
         {darkPeriods.length > 0 ? (
@@ -434,7 +437,7 @@ export default function Home() {
 
               <div className="rounded-md border border-slate-700 bg-slate-950/35 p-4">
                 <div className="mb-3 text-xs uppercase tracking-wider text-slate-400">Generate test data</div>
-                <DataGenerator onGenerate={(data) => { setDarkPeriods(data); setRecords([]); setIsDemo(false); setRightPanel('threats'); }} />
+                <DataGenerator onGenerate={(data) => { setDarkPeriods(data); setRecords([]); setSelectedPeriod(data[0] ?? null); setIsDemo(false); setChartRiskFilter(null); setRightPanel('threats'); }} />
               </div>
 
               {uploadHistory.length > 0 && (
@@ -459,7 +462,6 @@ export default function Home() {
         AIS parser · threat scorer · Supabase {supabase ? 'online' : 'offline'}
       </div>
 
-      {selectedPeriod && <VesselDetailModal period={selectedPeriod} onClose={() => setSelectedPeriod(null)} />}
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} scoringFactors={scoringFactors} onScoringChange={setScoringFactors} />
     </div>
   );
