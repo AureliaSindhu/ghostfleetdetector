@@ -96,26 +96,9 @@ export function RiskDistributionChart({
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={80}
-            label={({ name, value, cx, cy, midAngle, outerRadius }) => {
-              const RADIAN = Math.PI / 180;
-              const radius = outerRadius + 20;
-              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-              const y = cy + radius * Math.sin(-midAngle * RADIAN);
-              return (
-                <text
-                  x={x}
-                  y={y}
-                  fill="#67e8f9"
-                  textAnchor={x > cx ? 'start' : 'end'}
-                  dominantBaseline="central"
-                  style={{ fontSize: '10px', fontFamily: 'monospace' }}
-                >
-                  {`${name}: ${value}`}
-                </text>
-              );
-            }}
-            labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)', strokeWidth: 1 }}
+            outerRadius={65}
+            label={({ name, value }) => `${name[0]}:${value}`}
+            labelLine={{ stroke: 'rgba(0, 212, 255, 0.3)' }}
             onClick={(_, index) => handleClick(data[index])}
             style={{ cursor: onRiskFilter ? 'pointer' : 'default' }}
             isAnimationActive={false}
