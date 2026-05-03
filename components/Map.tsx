@@ -35,9 +35,10 @@ interface ViewState {
 interface MapProps {
   darkPeriods: ScoredDarkPeriod[];
   onSelectPeriod?: (period: ScoredDarkPeriod) => void;
+  isLiveScanning?: boolean;
 }
 
-export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
+export function DarkPeriodsMap({ darkPeriods, onSelectPeriod, isLiveScanning = false }: MapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isGlobeView, setIsGlobeView] = useState(false);
   const [viewState, setViewState] = useState<ViewState>({
@@ -128,7 +129,73 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
 
   return (
     <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0a1628]' : ''}`}>
-      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden border border-cyan-500/20`}>
+      <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden border border-cyan-500/20 relative`}>
+        {/* Radar Sweep Overlay - Active when live scanning */}
+        {isLiveScanning && (
+          <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+            {/* Radar sweep line */}
+            <div
+              className="absolute top-1/2 left-1/2 w-[150%] h-[150%] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                animation: 'radar-scan 4s linear infinite',
+              }}
+            >
+              {/* Sweep beam */}
+              <div
+                className="absolute top-1/2 left-1/2 w-1/2 h-1"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(0, 212, 255, 0.8) 0%, rgba(0, 212, 255, 0) 100%)',
+                  transformOrigin: 'left center',
+                  boxShadow: '0 0 30px rgba(0, 212, 255, 0.6), 0 0 60px rgba(0, 212, 255, 0.3)',
+                }}
+              />
+              {/* Sweep trail cone */}
+              <div
+                className="absolute top-0 left-1/2 w-1/2 h-1/2 origin-bottom-left"
+                style={{
+                  background: 'conic-gradient(from -90deg, transparent 0deg, rgba(0, 212, 255, 0.15) 20deg, rgba(0, 212, 255, 0.05) 40deg, transparent 60deg)',
+                  borderRadius: '100% 0 0 0',
+                }}
+              />
+            </div>
+
+            {/* Center ping */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_20px_#00d4ff,0_0_40px_#00d4ff] animate-pulse" />
+            </div>
+
+            {/* Concentric rings */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] border border-cyan-500/10 rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] border border-cyan-500/10 rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] border border-cyan-500/10 rounded-full" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] h-[20%] border border-cyan-500/10 rounded-full" />
+
+            {/* Crosshairs */}
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent" />
+
+            {/* Scanning status indicator */}
+            <div className="absolute top-3 left-3 bg-[#0d1f35]/90 border border-cyan-500/30 rounded px-3 py-1.5 flex items-center gap-2">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#00d4ff]" />
+              <span className="text-cyan-400 text-xs font-mono tracking-wider">SCANNING</span>
+            </div>
+
+            {/* Pulse rings emanating from center */}
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/50 rounded-full"
+              style={{ animation: 'radar-pulse 2s ease-out infinite' }}
+            />
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/30 rounded-full"
+              style={{ animation: 'radar-pulse 2s ease-out infinite 0.5s' }}
+            />
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-cyan-400/20 rounded-full"
+              style={{ animation: 'radar-pulse 2s ease-out infinite 1s' }}
+            />
+          </div>
+        )}
+
         <DeckGL
           viewState={viewState}
           onViewStateChange={handleViewStateChange}

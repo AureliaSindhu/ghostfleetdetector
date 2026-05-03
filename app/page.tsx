@@ -466,6 +466,7 @@ export default function Home() {
               <DarkPeriodsMap
                 darkPeriods={darkPeriods}
                 onSelectPeriod={setSelectedPeriod}
+                isLiveScanning={isLiveFeedActive}
               />
             </div>
 
