@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { DarkPeriodsMap } from '@/components/Map';
 import { RiskDistributionChart, DurationHistogram } from '@/components/Charts';
@@ -27,6 +27,10 @@ export default function Home() {
   const [uploadHistory, setUploadHistory] = useState<Array<{ id: string; filename: string | null; dark_periods_found: number; created_at: string }>>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [dbCount, setDbCount] = useState<number>(0);
+
+  // Chart filter state
+  const [chartRiskFilter, setChartRiskFilter] = useState<string | null>(null);
+  const [chartDurationFilter, setChartDurationFilter] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
 
   const supabase = useSupabase();
 
@@ -69,6 +73,27 @@ export default function Home() {
   };
 
   const summary = isDemo ? SAMPLE_SUMMARY : records.length > 0 ? getDataSummary(records) : null;
+
+  // Filter dark periods based on chart selections
+  const filteredDarkPeriods = useMemo(() => {
+    let result = darkPeriods;
+
+    if (chartRiskFilter) {
+      result = result.filter((dp) => dp.riskLevel === chartRiskFilter);
+    }
+
+    if (chartDurationFilter.min != null && chartDurationFilter.max != null) {
+      result = result.filter(
+        (dp) => dp.gapHours >= chartDurationFilter.min! && dp.gapHours < chartDurationFilter.max!
+      );
+    }
+
+    return result;
+  }, [darkPeriods, chartRiskFilter, chartDurationFilter]);
+
+  const handleDurationFilter = (min: number | null, max: number | null) => {
+    setChartDurationFilter({ min, max });
+  };
 
   const handleDownloadCSV = () => {
     const csv = [
@@ -276,13 +301,40 @@ export default function Home() {
             )}
 
             <div className="grid md:grid-cols-2 gap-6">
-              <RiskDistributionChart darkPeriods={darkPeriods} />
-              <DurationHistogram darkPeriods={darkPeriods} />
+              <RiskDistributionChart
+                darkPeriods={darkPeriods}
+                onRiskFilter={setChartRiskFilter}
+                activeRiskFilter={chartRiskFilter}
+              />
+              <DurationHistogram
+                darkPeriods={darkPeriods}
+                onDurationFilter={handleDurationFilter}
+                activeDurationFilter={chartDurationFilter}
+              />
             </div>
+
+            {(chartRiskFilter || chartDurationFilter.min != null) && (
+              <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3 flex items-center justify-between">
+                <span className="text-blue-300 text-sm">
+                  Showing {filteredDarkPeriods.length} of {darkPeriods.length} dark periods
+                  {chartRiskFilter && ` (${chartRiskFilter} risk)`}
+                  {chartDurationFilter.min != null && ` (${chartDurationFilter.min}-${chartDurationFilter.max === Infinity ? '72+' : chartDurationFilter.max}h duration)`}
+                </span>
+                <button
+                  onClick={() => {
+                    setChartRiskFilter(null);
+                    setChartDurationFilter({ min: null, max: null });
+                  }}
+                  className="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
 
             <div className="bg-gray-800 rounded-lg p-4">
               <h2 className="text-xl font-semibold mb-4">🚨 Top Suspicious Vessels</h2>
-              <VesselTable darkPeriods={darkPeriods} onSelect={setSelectedPeriod} />
+              <VesselTable darkPeriods={filteredDarkPeriods} onSelect={setSelectedPeriod} />
             </div>
 
             <div className="flex gap-4 flex-wrap">

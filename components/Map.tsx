@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, ArcLayer } from '@deck.gl/layers';
 import { Map as MapGL } from 'react-map-gl/mapbox';
@@ -23,6 +23,14 @@ const RISK_LABELS = [
   { level: 'LOW', color: 'bg-green-500', label: 'Low (0-29)' },
 ];
 
+interface ViewState {
+  longitude: number;
+  latitude: number;
+  zoom: number;
+  pitch: number;
+  bearing?: number;
+}
+
 interface MapProps {
   darkPeriods: ScoredDarkPeriod[];
   onSelectPeriod?: (period: ScoredDarkPeriod) => void;
@@ -30,6 +38,35 @@ interface MapProps {
 
 export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewState, setViewState] = useState<ViewState>({
+    longitude: 0,
+    latitude: 0,
+    zoom: 1,
+    pitch: 45,
+  });
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Initialize view state when dark periods load for the first time
+  useEffect(() => {
+    if (darkPeriods.length > 0 && !hasInitialized) {
+      const avgLat = darkPeriods.reduce((sum, d) => sum + d.lastLat, 0) / darkPeriods.length;
+      const avgLon = darkPeriods.reduce((sum, d) => sum + d.lastLon, 0) / darkPeriods.length;
+      setViewState({
+        longitude: avgLon,
+        latitude: avgLat,
+        zoom: 3,
+        pitch: 45,
+      });
+      setHasInitialized(true);
+    }
+  }, [darkPeriods, hasInitialized]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleViewStateChange = useCallback((params: any) => {
+    if (params.viewState) {
+      setViewState(params.viewState);
+    }
+  }, []);
 
   const layers = useMemo(() => {
     if (!darkPeriods.length) return [];
@@ -60,18 +97,6 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
     return [scatterLayer, arcLayer];
   }, [darkPeriods, onSelectPeriod]);
 
-  const initialViewState = useMemo(() => {
-    if (!darkPeriods.length) {
-      return { longitude: 0, latitude: 0, zoom: 1, pitch: 45 };
-    }
-
-    const avgLat =
-      darkPeriods.reduce((sum, d) => sum + d.lastLat, 0) / darkPeriods.length;
-    const avgLon =
-      darkPeriods.reduce((sum, d) => sum + d.lastLon, 0) / darkPeriods.length;
-
-    return { longitude: avgLon, latitude: avgLat, zoom: 3, pitch: 45 };
-  }, [darkPeriods]);
 
   // Count by risk level
   const riskCounts = useMemo(() => {
@@ -86,7 +111,8 @@ export function DarkPeriodsMap({ darkPeriods, onSelectPeriod }: MapProps) {
     <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-gray-900' : ''}`}>
       <div className={`w-full ${isFullscreen ? 'h-full' : 'h-[500px]'} rounded-lg overflow-hidden`}>
         <DeckGL
-          initialViewState={initialViewState}
+          viewState={viewState}
+          onViewStateChange={handleViewStateChange}
           controller={true}
           layers={layers}
           getTooltip={(info) => {
